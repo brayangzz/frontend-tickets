@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+/* 🔥 ESTO ES LO ÚNICO QUE FALTABA: */
+/* Le dice a Tailwind v4 que active el modo 'dark:' cuando exista la clase .dark en el HTML */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* 1. CONFIGURACIÓN DEL TEMA (Mapeo de variables) */
+@theme {
+  /* Aquí conectamos las clases de Tailwind con tus variables dinámicas */
+  --color-background: var(--bg-background);
+  --color-card: var(--bg-card);
+  --color-border: var(--border-color);
+  
+  /* Azul de la marca */
+  --color-primary: #137fec;
+
+  /* Texto Semántico */
+  --color-txt-main: var(--text-primary);
+  --color-txt-muted: var(--text-secondary);
+
+  /* Fuentes y Animaciones */
+  --font-display: "Inter", sans-serif;
+  
+  --animate-fade-in: fadeIn 0.5s ease-out;
+  --animate-slide-up: slideUp 0.4s ease-out;
+  --animate-enter: enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  @keyframes enter {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* 2. DEFINICIÓN DE VARIABLES (Los colores reales) */
+@layer base {
+  :root {
+    /* MODO CLARO (Sol) */
+    --bg-background: #F8F9FA;
+    --bg-card: #ffffff;
+    --text-primary: #334155;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+  }
+
+  .dark {
+    /* MODO OSCURO (Luna) */
+    --bg-background: #0f172a;
+    --bg-card: #1e293b;
+    --text-primary: #ffffff;
+    --text-secondary: #94a3b8;
+    --border-color: #334155;
+  }
+}
+
+/* 3. ESTILOS GLOBALES */
+body {
+  font-family: var(--font-display);
+  /* Usamos las variables dinámicas */
+  background-color: var(--bg-background);
+  color: var(--text-primary);
+  /* Transición suave al cambiar de tema */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Iconos */
+.material-symbols-rounded {
+  font-family: 'Material Symbols Rounded';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* Scrollbar personalizado */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #475569; }
