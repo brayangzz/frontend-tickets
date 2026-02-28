@@ -94,7 +94,7 @@ export const Login = () => {
               initial={{ opacity: 0, scale: 0.8, y: 20 }} 
               animate={{ opacity: 1, scale: 1, y: 0 }} 
               transition={{ duration: 0.8, ease: "easeOut" }}
-              src="/src/assets/logo.png" // <--- ASEGÚRATE DE QUE LA RUTA SEA CORRECTA
+              src="/public/logo.png" // <--- ASEGÚRATE DE QUE LA RUTA SEA CORRECTA
               alt="Logo Compers" 
               className="w-full max-w-[320px] object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] brightness-0 invert" 
             />
