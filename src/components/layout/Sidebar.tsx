@@ -75,7 +75,7 @@ const SidebarContent = ({ onClose }: { onClose?: () => void }) => {
         <div className="flex items-center group cursor-default">
             {/* LOGO ADAPTATIVO: A color en modo claro, Blanco en modo oscuro */}
             <img 
-                src="/public/logo.png" 
+                src="/logo.png" 
                 alt="Logo Compers" 
                 className="max-h-10 w-auto object-contain transition-transform duration-500 group-hover:scale-105 dark:brightness-0 dark:invert"
             />
