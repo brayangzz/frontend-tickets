@@ -32,7 +32,6 @@ const SidebarContent = ({ onClose }: { onClose?: () => void }) => {
       return "Colaborador";
   }, [rolesMap, userRoleId, isPrivileged]);
 
-
   // Usamos rounded-2xl para curvas suaves, scale para efecto "presión" y transiciones fluidas.
   const navItemClass = ({ isActive }: { isActive: boolean }) =>
     cn(
@@ -50,7 +49,7 @@ const SidebarContent = ({ onClose }: { onClose?: () => void }) => {
   // --- COMPONENTES DE LINK (Para reusar y ordenar) ---
   
   const LinkTickets = (
-    <NavLink to="/tickets" className={navItemClass}>
+    <NavLink to="/tickets" className={navItemClass} onClick={onClose}>
         {/* El icono rota ligeramente al hacer hover*/}
         <span className="material-symbols-rounded text-[24px] transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6">confirmation_number</span>
         <span className="text-[15px] tracking-wide">Tickets</span>
@@ -60,7 +59,7 @@ const SidebarContent = ({ onClose }: { onClose?: () => void }) => {
   );
 
   const LinkMisTareas = (
-    <NavLink to="/my-tasks" className={navItemClass}>
+    <NavLink to="/my-tasks" className={navItemClass} onClick={onClose}>
         <span className="material-symbols-rounded text-[22px] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">task_alt</span>
         <span className="text-[15px] tracking-wide">Mis Tareas</span>
     </NavLink>
@@ -102,12 +101,12 @@ const SidebarContent = ({ onClose }: { onClose?: () => void }) => {
         {/* 1. VISIBLE SOLO PARA PRIVILEGIADOS */}
         {isPrivileged && (
         <>
-            <NavLink to="/" className={navItemClass}>
+            <NavLink to="/" className={navItemClass} onClick={onClose}>
                 <span className="material-symbols-rounded text-[24px] transition-transform duration-300 group-hover:scale-110">grid_view</span>
                 <span className="text-[15px] tracking-wide">Dashboard</span>
             </NavLink>
             
-            <NavLink to="/users" className={navItemClass}>
+            <NavLink to="/users" className={navItemClass} onClick={onClose}>
                 <span className="material-symbols-rounded text-[24px] transition-transform duration-300 group-hover:scale-110">group</span>
                 <span className="text-[15px] tracking-wide">Usuarios</span>
             </NavLink>

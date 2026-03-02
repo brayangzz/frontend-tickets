@@ -24,12 +24,15 @@ export const AppLayout = () => {
          
          {/* HEADER MÓVIL (Solo visible en celular para abrir menú) */}
          <div className="lg:hidden p-4 flex items-center justify-between bg-white dark:bg-[#1e293b] border-b border-slate-200 dark:border-slate-800 sticky top-0 z-20">
-             <div className="flex items-center gap-3">
-                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm">
-                    <span className="material-symbols-rounded text-white text-[20px]">dns</span>
-                 </div>
-                 <h1 className="text-lg font-bold text-slate-800 dark:text-white">CompersSys</h1>
-             </div>
+            <div className="flex items-center gap-3">
+<div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm">
+  <img 
+    src="/logo2.png" 
+    alt="Logo"
+    className="w-7 h-7 object-contain brightness-0 invert"
+  />
+</div>
+</div>
              
              {/* BOTÓN HAMBURGUESA */}
              <button 
@@ -46,7 +49,6 @@ export const AppLayout = () => {
          </div>
 
       </main>
-      <SessionExpiredModal />
     </div>
   );
 };

@@ -1,35 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
-// ─── HELPER GLOBAL ─────────────────────────────────────────────────────────
-// Puedes importar y ejecutar esta función en cualquier parte de tu código
-// cuando detectes un error 401 (No autorizado) desde tu backend.
+// Helper Global
 export const triggerSessionExpired = () => {
   window.dispatchEvent(new Event("session-expired"));
 };
 
-// ─── COMPONENTE MODAL ──────────────────────────────────────────────────────
 export const SessionExpiredModal = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    const handleSessionExpired = () => {
-      setIsOpen(true);
-    };
-
-    // Escuchamos el evento global
+    const handleSessionExpired = () => setIsOpen(true);
     window.addEventListener("session-expired", handleSessionExpired);
-
-    // Limpiamos el evento al desmontar
     return () => window.removeEventListener("session-expired", handleSessionExpired);
   }, []);
 
   const handleLoginRedirect = () => {
     setIsOpen(false);
-    localStorage.clear(); // Limpiamos sesión por seguridad
-    navigate("/login", { replace: true }); // Redirigimos
+    localStorage.clear(); 
+    // Usamos redirección nativa para limpiar toda la memoria caché de React
+    window.location.href = "/login"; 
   };
 
   return (
@@ -41,7 +31,8 @@ export const SessionExpiredModal = () => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
+          // z-[99999] para que esté por encima de TODO
+          className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
         >
           <motion.div
             key="session-expired-content"
@@ -51,8 +42,6 @@ export const SessionExpiredModal = () => {
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="relative w-full max-w-sm bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700/60 rounded-[32px] shadow-2xl overflow-hidden flex flex-col p-8 text-center"
           >
-            
-            {/* Icono animado */}
             <motion.div 
                 initial={{ rotate: -15, scale: 0.8 }} 
                 animate={{ rotate: 0, scale: 1 }} 
@@ -78,7 +67,6 @@ export const SessionExpiredModal = () => {
               Iniciar Sesión
               <span className="material-symbols-rounded text-[20px]">login</span>
             </motion.button>
-
           </motion.div>
         </motion.div>
       )}

@@ -425,15 +425,15 @@ export const Users = () => {
         </div>
       </motion.div>
 
-      {/* TOOLBAR PÍLDORA */}
+      {/* TOOLBAR PÍLDORA (Ahora adaptable en móviles) */}
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
-        className="p-2 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 shadow-sm rounded-full flex flex-col lg:flex-row gap-2 items-center justify-between sticky top-4 z-30"
+        className="p-2 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 shadow-sm rounded-[24px] lg:rounded-full flex flex-col lg:flex-row gap-2 items-center justify-between sticky top-4 z-30"
       >
         {/* Búsqueda */}
-        <div className="relative group w-full lg:w-80 h-12">
+        <div className="relative group w-full lg:w-80 h-12 shrink-0">
           <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors text-xl">search</span>
           <input
             type="text"
@@ -444,24 +444,26 @@ export const Users = () => {
           />
         </div>
 
-        <div className="flex gap-2 w-full lg:w-auto shrink-0 pr-1">
+        {/* Filtros + Reset (Responsivos) */}
+        <div className="flex gap-2 w-full lg:w-auto shrink-0">
+          
           {/* Filtro Rol */}
-          <div className="relative" ref={roleRef}>
+          <div className="relative flex-1 lg:flex-none" ref={roleRef}>
             <motion.button
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
               onClick={() => setIsRoleOpen(!isRoleOpen)}
-              className={`flex items-center gap-3 h-12 px-6 rounded-full border bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm ${isRoleOpen ? "border-blue-500 ring-2 ring-blue-500/20" : "border-slate-200 dark:border-slate-700"}`}
+              className={`flex items-center justify-between gap-2 h-12 w-full lg:w-auto px-4 sm:px-6 rounded-full border bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm ${isRoleOpen ? "border-blue-500 ring-2 ring-blue-500/20" : "border-slate-200 dark:border-slate-700"}`}
             >
-              <span className="font-bold text-sm text-slate-700 dark:text-slate-200">
+              <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200 truncate">
                 {selectedRole === "all" ? "Rol" : selectedRole}
               </span>
-              <span className="material-symbols-rounded text-slate-400" style={{ transform: isRoleOpen ? "rotate(180deg)" : "none" }}>expand_more</span>
+              <span className="material-symbols-rounded text-slate-400 shrink-0" style={{ transform: isRoleOpen ? "rotate(180deg)" : "none" }}>expand_more</span>
             </motion.button>
             <AnimatePresence>
               {isRoleOpen && (
                 <motion.div
                   initial={{ opacity: 0, y: -10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.95 }} transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-60 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden z-[100] p-2"
+                  className="absolute left-0 lg:right-0 mt-2 w-56 sm:w-60 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden z-[100] p-2"
                 >
                   <div className="flex flex-col gap-1 max-h-60 overflow-y-auto comments-scroll">
                     <button onClick={() => { setSelectedRole("all"); setIsRoleOpen(false); }} className={`px-4 py-2.5 rounded-xl text-left text-sm font-bold transition-all ${selectedRole === "all" ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>Todos los roles</button>
@@ -475,22 +477,22 @@ export const Users = () => {
           </div>
 
           {/* Filtro Departamento */}
-          <div className="relative" ref={deptRef}>
+          <div className="relative flex-1 lg:flex-none" ref={deptRef}>
             <motion.button
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
               onClick={() => setIsDeptOpen(!isDeptOpen)}
-              className={`flex items-center gap-3 h-12 px-6 rounded-full border bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm ${isDeptOpen ? "border-blue-500 ring-2 ring-blue-500/20" : "border-slate-200 dark:border-slate-700"}`}
+              className={`flex items-center justify-between gap-2 h-12 w-full lg:w-auto px-4 sm:px-6 rounded-full border bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm ${isDeptOpen ? "border-blue-500 ring-2 ring-blue-500/20" : "border-slate-200 dark:border-slate-700"}`}
             >
-              <span className="font-bold text-sm text-slate-700 dark:text-slate-200">
-                {selectedDept === "all" ? "Departamento" : selectedDept}
+              <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200 truncate">
+                {selectedDept === "all" ? "Depto." : selectedDept}
               </span>
-              <span className="material-symbols-rounded text-slate-400" style={{ transform: isDeptOpen ? "rotate(180deg)" : "none" }}>expand_more</span>
+              <span className="material-symbols-rounded text-slate-400 shrink-0" style={{ transform: isDeptOpen ? "rotate(180deg)" : "none" }}>expand_more</span>
             </motion.button>
             <AnimatePresence>
               {isDeptOpen && (
                 <motion.div
                   initial={{ opacity: 0, y: -10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.95 }} transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-64 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden z-[100] p-2"
+                  className="absolute right-0 mt-2 w-56 sm:w-64 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden z-[100] p-2"
                 >
                   <div className="flex flex-col gap-1 max-h-60 overflow-y-auto comments-scroll">
                     <button onClick={() => { setSelectedDept("all"); setIsDeptOpen(false); }} className={`px-4 py-2.5 rounded-xl text-left text-sm font-bold transition-all ${selectedDept === "all" ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>Todos los departamentos</button>
