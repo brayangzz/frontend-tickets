@@ -19,7 +19,7 @@ const SidebarContent = ({ onClose }: { onClose?: () => void }) => {
   const userRoleId = Number(user.iIdRol || user.ildRol || user.idRole || 0);
 
   // 3. LÓGICA DE PERMISOS
-  const PRIVILEGED_IDS = [1, 25, 31, 32];
+  const PRIVILEGED_IDS = [32];
   const isPrivileged = PRIVILEGED_IDS.includes(userRoleId);
 
   // 4. ROL BONITO

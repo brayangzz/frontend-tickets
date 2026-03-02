@@ -20,6 +20,7 @@ interface ApiComment {
     sUser?: string;
     employeeName?: string;
     dDateCreate: string;
+    images?: string[]; 
 }
 
 interface ChatMessage {
@@ -29,6 +30,7 @@ interface ChatMessage {
     author: string;
     time: string;
     text: string;
+    images?: string[];
     avatarIcon?: string;
     avatarBg: string;
     initials?: string;
@@ -55,6 +57,29 @@ const getAvatarGradient = (id: number) => {
     return gradients[id % gradients.length];
 };
 
+// --- HELPER PARA DETECTAR ENLACES (LINKIFY) ---
+const linkifyText = (text: string) => {
+    if (!text) return text;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.split(urlRegex).map((part, i) => {
+        if (part.match(urlRegex)) {
+            return (
+                <a 
+                    key={i} 
+                    href={part} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="font-bold underline hover:opacity-80 hover:no-underline transition-all break-all"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {part}
+                </a>
+            );
+        }
+        return part;
+    });
+};
+
 export const TicketDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -68,7 +93,7 @@ export const TicketDetail = () => {
 
   const isSupport = [1, 2, 5, 20, 32].includes(userRole);
   
-  // LÓGICA DE PERMISOS: Solo Dani (Sistemas) puede heredar tickets. 
+  // LÓGICA DE PERMISOS
   const isDani = currentUserId === 28 || currentUserId === 33 || currentUserName.toLowerCase().includes('dan');
   const canAssign = isSupport && isDani;
 
@@ -102,9 +127,23 @@ export const TicketDetail = () => {
   const [comments, setComments] = useState<ApiComment[]>([]);
   const [commentText, setCommentText] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [commentImages, setCommentImages] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // REFERENCIA PARA SCROLL
   const commentsScrollRef = useRef<HTMLDivElement>(null);
+
+  // --- FUNCION AUXILIAR DE SCROLL FORZADO ---
+  const scrollToBottom = () => {
+      setTimeout(() => {
+          if (commentsScrollRef.current) {
+              commentsScrollRef.current.scrollTo({
+                  top: commentsScrollRef.current.scrollHeight,
+                  behavior: "smooth"
+              });
+          }
+      }, 150); 
+  };
 
   // --- CARGAR COMENTARIOS ---
   const fetchComments = async (taskId: number) => {
@@ -159,6 +198,8 @@ export const TicketDetail = () => {
             setTitleEdit(ticketData.sName || "");
             
             await fetchComments(ticketData.iIdTask);
+            
+            scrollToBottom();
         }
       } catch (error) { console.error(error); } finally { setIsLoading(false); }
     };
@@ -200,13 +241,20 @@ export const TicketDetail = () => {
   useEffect(() => {
       const el = commentsScrollRef.current;
       if (!el) return;
-      const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-      if (distanceFromBottom < 100) el.scrollTop = el.scrollHeight;
-  }, [comments]);
+      
+      const timeoutId = setTimeout(() => {
+          const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+          if (distanceFromBottom < 350) {
+              el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+          }
+      }, 150);
+
+      return () => clearTimeout(timeoutId);
+  }, [comments, commentImages]);
 
   const isCreator = ticket ? ticket.iIdUserRaisedTask === currentUserId : false;
 
-  // --- ASIGNAR TICKET (CONFIRMACIÓN) ---
+  // --- ASIGNAR TICKET ---
   const handleAssignUser = async () => {
     if (!ticket || !pendingAssignId) return;
     setIsAssigning(true);
@@ -260,7 +308,6 @@ export const TicketDetail = () => {
     } catch (error) { console.error(error); } finally { setIsSavingStatus(false); }
   };
 
-  // --- GUARDAR EDICIÓN (INLINE) ---
   const handleSaveDescription = async () => {
     if (!ticket) return;
     if (!descriptionEdit.trim() || !titleEdit.trim()) { alert("El título y la descripción no pueden estar vacíos."); return; }
@@ -290,36 +337,91 @@ export const TicketDetail = () => {
       setIsEditingDescription(false);
   };
 
+  // --- MANEJO DE IMÁGENES EN COMENTARIOS ---
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files) {
+          const filesArray = Array.from(e.target.files);
+          setCommentImages(prev => [...prev, ...filesArray]);
+          scrollToBottom(); 
+      }
+      if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeImage = (index: number) => {
+      setCommentImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // --- DESCARGAR IMAGEN (TRUCO BLOB PARA BYPASSEAR CORS/CLOUDINARY) ---
+  const handleDownloadImage = async (imgUrl: string) => {
+      try {
+          // Descargamos la imagen primero en memoria
+          const response = await fetch(imgUrl);
+          const blob = await response.blob();
+          
+          // Creamos una URL local del archivo descargado
+          const blobUrl = window.URL.createObjectURL(blob);
+          
+          // Creamos el enlace invisible y forzamos la descarga
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = `evidencia_${new Date().getTime()}.png`;
+          document.body.appendChild(link);
+          link.click();
+          
+          // Limpiamos
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(blobUrl);
+      } catch (error) {
+          console.error("Error al forzar descarga de imagen:", error);
+          // Si el servidor bloquea la lectura por CORS, abrimos en nueva pestaña como fallback
+          window.open(imgUrl, '_blank');
+      }
+  };
+
   // --- ENVIAR NUEVO COMENTARIO ---
   const handleSendComment = async () => {
-      if(!commentText.trim() || !ticket) return;
+      if((!commentText.trim() && commentImages.length === 0) || !ticket) return;
       setIsSubmittingComment(true);
+      
       try {
           const token = localStorage.getItem('token');
-          const payload = {
-              iIdTask: ticket.iIdTask,
-              ildTask: ticket.iIdTask,
-              sComment: commentText.trim(),
-              iIdUser: currentUserId,
-              ildUser: currentUserId
-          };
+          const formData = new FormData();
+          
+          formData.append("iIdTask", String(ticket.iIdTask));
+          formData.append("ildTask", String(ticket.iIdTask));
+          formData.append("iIdUser", String(currentUserId));
+          formData.append("ildUser", String(currentUserId));
+          
+          formData.append("sComment", commentText.trim() || "Adjuntó imagen(es)");
+
+          commentImages.forEach(file => {
+              formData.append("Images", file);
+          });
 
           const res = await fetch(`https://tickets-backend-api-gxbkf5enbafxcvb2.francecentral-01.azurewebsites.net/api/TicketComments`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-              body: JSON.stringify(payload)
+              headers: { 'Authorization': `Bearer ${token}` },
+              body: formData
           });
 
           if (res.ok) {
               setCommentText(""); 
+              setCommentImages([]); 
               await fetchComments(ticket.iIdTask); 
+              scrollToBottom(); 
           } else {
+              const errorText = await res.text();
+              console.error("Error del servidor:", errorText);
               alert("Error al enviar el comentario.");
           }
-      } catch (error) { console.error(error); } finally { setIsSubmittingComment(false); }
+      } catch (error) { 
+          console.error("Error en la petición:", error); 
+      } finally { 
+          setIsSubmittingComment(false); 
+      }
   };
 
-  // --- HELPERS VISUALES CORREGIDOS ---
+  // --- HELPERS VISUALES ---
   const formatDate = (d: string | null | undefined) => d ? new Date(d).toLocaleString("es-MX", { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : "-";
   
   const formatCommentTime = (d: string | null | undefined) => {
@@ -336,7 +438,7 @@ export const TicketDetail = () => {
       }
   };
 
-  // --- CONSTRUCCIÓN DEL CHAT DE COMENTARIOS ---
+  // --- CONSTRUCCIÓN DEL CHAT ---
   const chatMessages = useMemo<ChatMessage[]>(() => {
       if (!ticket) return [];
       
@@ -365,6 +467,7 @@ export const TicketDetail = () => {
               author: isMine ? 'Tú' : authorName,
               time: formatCommentTime(c.dDateCreate),
               text: c.sComment,
+              images: c.images || [], 
               initials: getInitials(authorName),
               avatarBg: isMine ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
           };
@@ -453,11 +556,11 @@ export const TicketDetail = () => {
                 </div>
             </div>
 
-            {/* CONTENEDOR SELECTORES (RESPONSIVO Y UNIFICADO) */}
+            {/* CONTENEDOR SELECTORES */}
             <motion.div 
                 layout
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className="relative z-[60] flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-5 bg-white/50 dark:bg-slate-800/50 backdrop-blur-md px-5 py-4 sm:py-3 rounded-[24px] sm:rounded-[28px] border border-slate-200/50 dark:border-slate-700/50 shadow-sm w-full lg:w-auto self-start xl:self-center"
+                className="relative z-30 flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-5 bg-white/50 dark:bg-slate-800/50 backdrop-blur-md px-5 py-4 sm:py-3 rounded-[24px] sm:rounded-[28px] border border-slate-200/50 dark:border-slate-700/50 shadow-sm w-full lg:w-auto self-start xl:self-center"
             >
                 {isSupport ? (
                     <>
@@ -631,8 +734,29 @@ export const TicketDetail = () => {
                                                     <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[120px] sm:max-w-none">{msg.author}</span>
                                                     <span className="text-[8px] sm:text-[9px] font-medium text-slate-400 uppercase tracking-wide whitespace-nowrap">{msg.time}</span>
                                                 </div>
-                                                <div className={`px-4 sm:px-5 py-2.5 sm:py-3 shadow-sm text-[13px] sm:text-sm font-medium leading-relaxed transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md break-words ${msg.isMine ? 'bg-blue-600 text-white border border-blue-500 rounded-[20px] rounded-tr-[4px]' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-[20px] rounded-tl-[4px]'}`}>
-                                                    {msg.text}
+                                                
+                                                <div className={`flex flex-col gap-2 px-4 sm:px-5 py-2.5 sm:py-3 shadow-sm transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md ${msg.isMine ? 'bg-blue-600 text-white border border-blue-500 rounded-[20px] rounded-tr-[4px]' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-[20px] rounded-tl-[4px]'}`}>
+                                                    
+                                                    {/* IMÁGENES DEL COMENTARIO */}
+                                                    {msg.images && msg.images.length > 0 && (
+                                                        <div className={`flex flex-wrap gap-2 ${msg.isMine ? 'justify-end' : 'justify-start'}`}>
+                                                            {msg.images.map((imgUrl, idx) => (
+                                                                <div key={idx} onClick={() => setPreviewImage(imgUrl)} className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden cursor-pointer border border-black/10 dark:border-white/10 shadow-sm relative group/img">
+                                                                    <img src={imgUrl} alt="Comentario adjunto" className="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-110" />
+                                                                    <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/20 transition-colors flex items-center justify-center">
+                                                                        <span className="material-symbols-rounded text-white opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-md">zoom_in</span>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+
+                                                    {/* TEXTO CON ENLACES */}
+                                                    {msg.text && (
+                                                        <div className="text-[13px] sm:text-sm font-medium leading-relaxed whitespace-pre-wrap m-0">
+                                                            {linkifyText(msg.text)}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -642,11 +766,37 @@ export const TicketDetail = () => {
                       </div>
                   </div>
 
-                  <div className="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-[#1e293b]">
-                      <div className="relative shadow-sm rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 group focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
-                          <textarea value={commentText} onChange={(e) => setCommentText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendComment(); } }} placeholder="Escribe una respuesta..." className="w-full bg-transparent pl-4 pr-14 py-3 sm:py-4 text-sm font-medium text-slate-700 dark:text-slate-200 focus:outline-none resize-none min-h-[70px] sm:min-h-[90px] placeholder:text-slate-400" />
+                  <div className="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-[#1e293b] flex flex-col gap-3">
+                      
+                      {/* PREVISUALIZACIÓN DE IMÁGENES A SUBIR */}
+                      <AnimatePresence>
+                        {commentImages.length > 0 && (
+                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="flex flex-wrap gap-2 px-1">
+                                {commentImages.map((file, idx) => (
+                                    <div key={idx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-300 dark:border-slate-600 group shadow-sm">
+                                        <img src={URL.createObjectURL(file)} alt="preview" className="w-full h-full object-cover" />
+                                        <button onClick={() => removeImage(idx)} className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white hover:bg-rose-500/80">
+                                            <span className="material-symbols-rounded text-xl">delete</span>
+                                        </button>
+                                    </div>
+                                ))}
+                            </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      <div className="relative shadow-sm rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 group focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all flex items-end">
+                          
+                          {/* INPUT OCULTO DE ARCHIVOS */}
+                          <input type="file" multiple accept="image/*" ref={fileInputRef} onChange={handleImageChange} className="hidden" />
+                          
+                          <button onClick={() => fileInputRef.current?.click()} className="p-3 sm:p-4 text-slate-400 hover:text-blue-500 transition-colors h-full flex items-end shrink-0" title="Adjuntar imagen">
+                              <span className="material-symbols-rounded text-xl sm:text-2xl">add_photo_alternate</span>
+                          </button>
+
+                          <textarea value={commentText} onChange={(e) => setCommentText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendComment(); } }} placeholder="Escribe una respuesta o pega un enlace..." className="w-full bg-transparent pl-1 pr-14 py-3 sm:py-4 text-sm font-medium text-slate-700 dark:text-slate-200 focus:outline-none resize-none min-h-[70px] sm:min-h-[90px] placeholder:text-slate-400" />
+                          
                           <div className="absolute right-2 sm:right-3 bottom-2 sm:bottom-3 flex items-center">
-                              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleSendComment} disabled={!commentText.trim() || isSubmittingComment} className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-xl flex items-center justify-center shadow-md transition-all">
+                              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleSendComment} disabled={(!commentText.trim() && commentImages.length === 0) || isSubmittingComment} className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-xl flex items-center justify-center shadow-md transition-all">
                                   {isSubmittingComment ? <span className="material-symbols-rounded animate-spin text-base sm:text-lg">progress_activity</span> : <span className="material-symbols-rounded text-base sm:text-lg ml-0.5 sm:ml-1">send</span>}
                               </motion.button>
                           </div>
@@ -682,9 +832,34 @@ export const TicketDetail = () => {
 
       <AnimatePresence>
       {previewImage && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-2xl" onClick={() => setPreviewImage(null)}>
-            <motion.button whileHover={{ rotate: 90, scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setPreviewImage(null)} className="absolute top-6 right-6 w-12 h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full text-white transition-all z-50 border border-white/10 shadow-xl backdrop-blur-sm"><span className="material-symbols-rounded text-2xl">close</span></motion.button>
-            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 300, damping: 30 }} className="flex-1 w-full h-full flex items-center justify-center p-4 sm:p-8" onClick={(e) => e.stopPropagation()}><img src={previewImage} alt="Preview" className="max-h-full max-w-full object-contain rounded-lg shadow-2xl" /></motion.div>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-950/90 backdrop-blur-2xl" onClick={() => setPreviewImage(null)}>
+            
+            {/* CONTROLES DEL MODAL DE IMAGEN */}
+            <div className="absolute top-6 right-6 flex items-center gap-3 z-50">
+                <motion.button 
+                    whileHover={{ scale: 1.1 }} 
+                    whileTap={{ scale: 0.9 }} 
+                    onClick={(e) => { e.stopPropagation(); handleDownloadImage(previewImage); }} 
+                    className="w-12 h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full text-white transition-all border border-white/10 shadow-xl backdrop-blur-sm"
+                    title="Descargar imagen"
+                >
+                    <span className="material-symbols-rounded text-2xl">download</span>
+                </motion.button>
+
+                <motion.button 
+                    whileHover={{ rotate: 90, scale: 1.1 }} 
+                    whileTap={{ scale: 0.9 }} 
+                    onClick={() => setPreviewImage(null)} 
+                    className="w-12 h-12 flex items-center justify-center bg-white/10 hover:bg-rose-500/80 rounded-full text-white transition-all border border-white/10 shadow-xl backdrop-blur-sm"
+                    title="Cerrar previsualización"
+                >
+                    <span className="material-symbols-rounded text-2xl">close</span>
+                </motion.button>
+            </div>
+
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 300, damping: 30 }} className="flex-1 w-full h-full flex items-center justify-center p-4 sm:p-8" onClick={(e) => e.stopPropagation()}>
+                <img src={previewImage} alt="Preview" className="max-h-full max-w-full object-contain rounded-lg shadow-2xl" />
+            </motion.div>
         </motion.div>
       )}
       </AnimatePresence>
@@ -746,7 +921,7 @@ const ModernAssignSelector = ({ options, selectedId, onChange }: { options: ApiU
             <AnimatePresence>
             {isOpen && (
                 <motion.div initial={{ opacity: 0, y: -10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.95 }} 
-                    className="absolute right-0 sm:left-0 sm:right-auto mt-2 w-[calc(100vw-40px)] sm:w-64 max-w-full bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-[100] origin-top p-2">
+                    className="absolute left-0 mt-2 w-full sm:w-64 max-w-full bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-[100] origin-top p-2">
                     <div className="flex flex-col gap-1 max-h-60 overflow-y-auto overflow-x-hidden comments-scroll pr-1">
                         {options.map((opt) => {
                             const optId = opt.iIdUser || opt.ildUser || 0;
@@ -818,7 +993,7 @@ const ModernStatusSelector = ({ options, selectedId, onChange }: { options: Stat
             <AnimatePresence>
             {isOpen && (
                 <motion.div initial={{ opacity: 0, y: -10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.95 }} 
-                    className="absolute right-0 sm:left-auto mt-2 w-[calc(100vw-40px)] sm:w-56 max-w-full bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-[100] origin-top p-2">
+                    className="absolute left-0 mt-2 w-full sm:w-56 max-w-full bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-[100] origin-top p-2">
                     <div className="flex flex-col gap-1 max-h-60 overflow-y-auto overflow-x-hidden comments-scroll pr-1">
                         {options.filter(opt => opt.iIdStatus !== 4).map((opt) => {
                             const style = getStatusStyle(opt.iIdStatus);

@@ -184,8 +184,8 @@ export const CreateTicket = () => {
     );
   }
 
-  // --- CLASES REUTILIZABLES PARA INPUTS PREMIUM ---
-  const inputPremiumClass = "w-full px-5 py-4 bg-[#0f172a] border border-slate-700/80 rounded-2xl text-[15px] text-white focus:bg-[#131c2f] focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 outline-none transition-all hover:border-slate-600 placeholder:text-slate-500 font-medium shadow-inner";
+  // --- CLASES REUTILIZABLES PARA INPUTS PREMIUM (Adaptables al tema) ---
+  const inputPremiumClass = "w-full px-5 py-4 bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700/80 rounded-2xl text-[15px] text-slate-800 dark:text-white focus:bg-white dark:focus:bg-[#131c2f] focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 outline-none transition-all hover:border-slate-300 dark:hover:border-slate-600 placeholder:text-slate-400 dark:placeholder:text-slate-500 font-medium shadow-inner";
 
   // --- VISTA FORMULARIO ---
   return (
@@ -255,7 +255,7 @@ export const CreateTicket = () => {
 
             {/* TÍTULO */}
             <div className="flex flex-col gap-2.5 group">
-              <label className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-300 group-focus-within:text-blue-500 transition-colors ml-1">
+              <label className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 group-focus-within:text-blue-500 transition-colors ml-1">
                 Asunto / Título del problema <span className="text-rose-500">*</span>
               </label>
               <input
@@ -268,7 +268,7 @@ export const CreateTicket = () => {
 
             {/* DESCRIPCIÓN */}
             <div className="flex flex-col gap-2.5 group">
-              <label className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-300 group-focus-within:text-blue-500 transition-colors ml-1">
+              <label className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 group-focus-within:text-blue-500 transition-colors ml-1">
                 Detalles del problema <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
@@ -277,7 +277,7 @@ export const CreateTicket = () => {
                   placeholder="Explica a detalle qué sucede, desde cuándo y en qué equipo o área..."
                   className={`${inputPremiumClass} resize-none pb-8`}
                 />
-                <div className="absolute bottom-3 right-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-[#1e293b] px-2 py-1 rounded-lg border border-slate-700 pointer-events-none">
+                <div className="absolute bottom-3 right-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-white dark:bg-[#1e293b] px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 pointer-events-none">
                   {description.length}/2000
                 </div>
               </div>
@@ -288,7 +288,7 @@ export const CreateTicket = () => {
               
               {/* SUCURSAL */}
               <div className="flex flex-col gap-2.5 group">
-                <label className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-300 group-focus-within:text-blue-500 transition-colors ml-1 flex items-center gap-1.5">
+                <label className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 group-focus-within:text-blue-500 transition-colors ml-1 flex items-center gap-1.5">
                   <span className="material-symbols-rounded text-[16px] text-blue-500">store</span>
                   Sucursal <span className="text-rose-500">*</span>
                 </label>
@@ -299,10 +299,10 @@ export const CreateTicket = () => {
                     whileTap={!isLoadingData ? { scale: 0.98 } : {}}
                     onClick={() => !isLoadingData && setIsBranchOpen(!isBranchOpen)}
                     className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all shadow-inner ${
-                      isBranchOpen ? "bg-[#131c2f] border-blue-500 ring-4 ring-blue-500/15" : "bg-[#0f172a] border-slate-700/80 hover:border-slate-600"
+                      isBranchOpen ? "bg-white dark:bg-[#131c2f] border-blue-500 ring-4 ring-blue-500/15" : "bg-slate-50 dark:bg-[#0f172a] border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600"
                     } ${isLoadingData ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                   >
-                    <span className={`font-medium text-[15px] truncate ${selectedBranch === "" ? "text-slate-500" : "text-white"}`}>
+                    <span className={`font-medium text-[15px] truncate ${selectedBranch === "" ? "text-slate-400 dark:text-slate-500" : "text-slate-800 dark:text-white"}`}>
                       {isLoadingData ? "Cargando..." : selectedBranch === "" ? "Selecciona tu sucursal" : branchesList.find((b) => b.iIdBranch === Number(selectedBranch))?.sBranch}
                     </span>
                     <span className="material-symbols-rounded text-slate-400" style={{ transform: isBranchOpen ? "rotate(180deg)" : "none" }}>expand_more</span>
@@ -311,7 +311,7 @@ export const CreateTicket = () => {
                     {isBranchOpen && (
                       <motion.div
                         initial={{ opacity: 0, y: -10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.95 }} transition={{ duration: 0.2 }}
-                        className="absolute left-0 right-0 mt-2 bg-[#1e293b] border border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-[100] p-2"
+                        className="absolute left-0 right-0 mt-2 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-[100] p-2"
                       >
                         <div className="flex flex-col gap-1 max-h-60 overflow-y-auto comments-scroll pr-1">
                           {branchesList.map((b) => (
@@ -319,7 +319,7 @@ export const CreateTicket = () => {
                               type="button"
                               key={b.iIdBranch}
                               onClick={() => { setSelectedBranch(b.iIdBranch); setIsBranchOpen(false); setErrorMessage(null); }}
-                              className={`px-4 py-3 rounded-xl text-left text-sm font-bold transition-all ${selectedBranch === b.iIdBranch ? "bg-blue-500/15 text-blue-400 border border-blue-500/30" : "text-slate-300 hover:bg-[#0f172a] border border-transparent"}`}
+                              className={`px-4 py-3 rounded-xl text-left text-sm font-bold transition-all ${selectedBranch === b.iIdBranch ? "bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#0f172a] border border-transparent"}`}
                             >
                               {b.sBranch}
                             </button>
@@ -333,7 +333,7 @@ export const CreateTicket = () => {
 
               {/* DEPARTAMENTO */}
               <div className="flex flex-col gap-2.5 group">
-                <label className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-300 group-focus-within:text-indigo-500 transition-colors ml-1 flex items-center gap-1.5">
+                <label className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 group-focus-within:text-indigo-500 transition-colors ml-1 flex items-center gap-1.5">
                   <span className="material-symbols-rounded text-[16px] text-indigo-500">domain</span>
                   Departamento <span className="text-rose-500">*</span>
                 </label>
@@ -344,10 +344,10 @@ export const CreateTicket = () => {
                     whileTap={!isLoadingData ? { scale: 0.98 } : {}}
                     onClick={() => !isLoadingData && setIsDeptOpen(!isDeptOpen)}
                     className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all shadow-inner ${
-                      isDeptOpen ? "bg-[#131c2f] border-indigo-500 ring-4 ring-indigo-500/15" : "bg-[#0f172a] border-slate-700/80 hover:border-slate-600"
+                      isDeptOpen ? "bg-white dark:bg-[#131c2f] border-indigo-500 ring-4 ring-indigo-500/15" : "bg-slate-50 dark:bg-[#0f172a] border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600"
                     } ${isLoadingData ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                   >
-                    <span className={`font-medium text-[15px] truncate ${selectedDept === "" ? "text-slate-500" : "text-white"}`}>
+                    <span className={`font-medium text-[15px] truncate ${selectedDept === "" ? "text-slate-400 dark:text-slate-500" : "text-slate-800 dark:text-white"}`}>
                       {isLoadingData ? "Cargando..." : selectedDept === "" ? "Selecciona tu departamento" : departmentsList.find((d) => d.iIdDepartment === Number(selectedDept))?.sDepartment}
                     </span>
                     <span className="material-symbols-rounded text-slate-400" style={{ transform: isDeptOpen ? "rotate(180deg)" : "none" }}>expand_more</span>
@@ -356,7 +356,7 @@ export const CreateTicket = () => {
                     {isDeptOpen && (
                       <motion.div
                         initial={{ opacity: 0, y: -10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.95 }} transition={{ duration: 0.2 }}
-                        className="absolute left-0 right-0 mt-2 bg-[#1e293b] border border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-[100] p-2"
+                        className="absolute left-0 right-0 mt-2 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-[100] p-2"
                       >
                         <div className="flex flex-col gap-1 max-h-60 overflow-y-auto comments-scroll pr-1">
                           {departmentsList.map((d) => (
@@ -364,7 +364,7 @@ export const CreateTicket = () => {
                               type="button"
                               key={d.iIdDepartment}
                               onClick={() => { setSelectedDept(d.iIdDepartment); setIsDeptOpen(false); setErrorMessage(null); }}
-                              className={`px-4 py-3 rounded-xl text-left text-sm font-bold transition-all ${selectedDept === d.iIdDepartment ? "bg-indigo-500/15 text-indigo-400 border border-indigo-500/30" : "text-slate-300 hover:bg-[#0f172a] border border-transparent"}`}
+                              className={`px-4 py-3 rounded-xl text-left text-sm font-bold transition-all ${selectedDept === d.iIdDepartment ? "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#0f172a] border border-transparent"}`}
                             >
                               {d.sDepartment}
                             </button>
@@ -380,9 +380,9 @@ export const CreateTicket = () => {
           </div>
 
           {/* SECCIÓN ADJUNTOS */}
-          <div className="px-8 md:px-10 pb-10 flex flex-col gap-5 border-t border-slate-100 dark:border-slate-800/80 pt-8 bg-slate-50/20 dark:bg-[#1e293b]/50">
+          <div className="px-8 md:px-10 pb-10 flex flex-col gap-5 border-t border-slate-100 dark:border-slate-800/80 pt-8 bg-slate-50/50 dark:bg-[#1e293b]/50">
             <div className="flex items-center gap-4 mb-2">
-              <div className="w-12 h-12 bg-slate-50 dark:bg-[#0f172a] text-slate-500 dark:text-slate-400 rounded-2xl flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-inner">
+              <div className="w-12 h-12 bg-white dark:bg-[#0f172a] text-slate-500 dark:text-slate-400 rounded-2xl flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-inner">
                 <span className="material-symbols-rounded text-2xl">attach_file</span>
               </div>
               <div>
@@ -401,21 +401,21 @@ export const CreateTicket = () => {
               onDrop={handleDrop}
               className={`w-full border-2 border-dashed rounded-[24px] p-10 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 group ${
                 isDragging
-                  ? "border-blue-500 bg-blue-500/10 scale-[1.02]"
-                  : "border-slate-600 bg-[#0f172a]/50 hover:border-blue-400 hover:bg-[#0f172a]"
+                  ? "border-blue-500 bg-blue-50 dark:bg-blue-500/10 scale-[1.02]"
+                  : "border-slate-300 dark:border-slate-600 bg-white dark:bg-[#0f172a]/50 hover:border-blue-400 dark:hover:border-blue-400 hover:bg-slate-50 dark:hover:bg-[#0f172a]"
               }`}
             >
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300 shadow-lg ${
                 isDragging
                   ? "bg-blue-500 text-white"
-                  : "bg-[#1e293b] text-slate-400 border border-slate-700 group-hover:bg-blue-500/20 group-hover:text-blue-400 group-hover:border-blue-500/30 group-hover:-translate-y-1"
+                  : "bg-slate-100 dark:bg-[#1e293b] text-slate-400 dark:text-slate-400 border border-slate-200 dark:border-slate-700 group-hover:bg-blue-50 dark:group-hover:bg-blue-500/20 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-hover:border-blue-200 dark:group-hover:border-blue-500/30 group-hover:-translate-y-1"
               }`}>
                 <span className="material-symbols-rounded text-[28px]">cloud_upload</span>
               </div>
-              <p className="text-[15px] font-bold text-slate-600 dark:text-slate-300 group-hover:text-blue-400 transition-colors">
+              <p className="text-[15px] font-bold text-slate-700 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                 {isDragging ? "Suelta los archivos aquí..." : "Haz clic para buscar o arrastra tus archivos aquí"}
               </p>
-              <p className="text-xs text-slate-500 mt-1.5 font-medium">Límite por archivo: 10MB</p>
+              <p className="text-xs text-slate-500 dark:text-slate-500 mt-1.5 font-medium">Límite por archivo: 10MB</p>
             </motion.div>
 
             <AnimatePresence>
@@ -429,14 +429,14 @@ export const CreateTicket = () => {
                       key={item.id}
                       initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
                       transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                      className="flex items-center gap-3 bg-[#0f172a] border border-slate-700 pl-2 pr-4 py-2 rounded-2xl text-xs font-semibold text-slate-200 shadow-md group"
+                      className="flex items-center gap-3 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 pl-2 pr-4 py-2 rounded-2xl text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-sm group"
                     >
                       {item.previewUrl ? (
-                        <div className="w-10 h-10 rounded-xl overflow-hidden border border-slate-600 shrink-0 bg-black">
+                        <div className="w-10 h-10 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-600 shrink-0 bg-slate-100 dark:bg-black">
                           <img src={item.previewUrl} alt="preview" className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" />
                         </div>
                       ) : (
-                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0 text-blue-400 border border-blue-500/20">
+                        <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20">
                           <span className="material-symbols-rounded text-[20px]">description</span>
                         </div>
                       )}
@@ -444,7 +444,7 @@ export const CreateTicket = () => {
                       <motion.button
                         whileHover={{ scale: 1.2, rotate: 90 }} whileTap={{ scale: 0.8 }}
                         onClick={(e) => { e.stopPropagation(); removeFile(item.id); }}
-                        className="text-slate-500 hover:text-rose-500 transition-colors ml-1 flex items-center justify-center"
+                        className="text-slate-400 hover:text-rose-500 transition-colors ml-1 flex items-center justify-center"
                       >
                         <span className="material-symbols-rounded text-[18px]">cancel</span>
                       </motion.button>
@@ -456,11 +456,11 @@ export const CreateTicket = () => {
           </div>
 
           {/* FOOTER ACCIONES */}
-          <div className="px-8 py-6 bg-[#0f172a] border-t border-slate-800 flex flex-col-reverse md:flex-row justify-end items-center gap-4">
+          <div className="px-8 py-6 bg-slate-50 dark:bg-[#0f172a] border-t border-slate-200 dark:border-slate-800 flex flex-col-reverse md:flex-row justify-end items-center gap-4">
             <motion.button
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
               onClick={() => navigate(-1)}
-              className="w-full md:w-auto px-8 py-3.5 rounded-full border border-slate-700 text-sm font-bold text-slate-400 hover:bg-[#1e293b] hover:text-white hover:border-slate-600 transition-all"
+              className="w-full md:w-auto px-8 py-3.5 rounded-full border border-slate-300 dark:border-slate-700 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-[#1e293b] hover:text-slate-900 dark:hover:text-white hover:border-slate-400 dark:hover:border-slate-600 transition-all"
             >
               Cancelar
             </motion.button>
@@ -471,8 +471,8 @@ export const CreateTicket = () => {
               disabled={isSubmitting || isLoadingData || !isValid}
               className={`w-full md:w-auto px-10 py-3.5 rounded-full font-bold text-[15px] flex items-center justify-center gap-2 transition-all ${
                 isSubmitting || isLoadingData || !isValid
-                  ? "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700"
-                  : "bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] border border-blue-500/50"
+                  ? "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed border border-transparent dark:border-slate-700"
+                  : "bg-blue-600 hover:bg-blue-500 text-white shadow-[0_8px_20px_rgba(37,99,235,0.2)] dark:shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_10px_25px_rgba(37,99,235,0.3)] dark:hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] border border-blue-500/50"
               }`}
             >
               {isSubmitting ? (

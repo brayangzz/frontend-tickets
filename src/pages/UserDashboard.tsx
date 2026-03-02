@@ -192,11 +192,11 @@ export const UserDashboard = () => {
                 ))}
             </div>
 
-            {/* BARRA DE BÚSQUEDA Y ACCIONES "PÍLDORA" */}
-            <div className="p-2.5 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 shadow-md rounded-full flex flex-col lg:flex-row gap-3 items-center justify-between sticky top-4 z-30">
+            {/* BARRA DE BÚSQUEDA Y ACCIONES "PÍLDORA" (Responsiva) */}
+            <div className="p-2.5 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 shadow-md rounded-[24px] lg:rounded-full flex flex-col lg:flex-row gap-3 items-center justify-between sticky top-4 z-30">
                 <div className="flex flex-col md:flex-row w-full lg:w-auto items-center gap-3">
                     {/* Buscador */}
-                    <div className="relative group w-full md:w-80 h-11">
+                    <div className="relative group w-full md:w-80 h-11 shrink-0">
                         <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors text-xl">search</span>
                         <input 
                             type="text" 

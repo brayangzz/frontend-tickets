@@ -115,14 +115,13 @@ const CustomSelect = ({ name, value, onChange, options, placeholder, icon, hasEr
   const dropdownRef = useRef<HTMLDivElement>(null);
   const selected = options.find((o) => o.value === value);
 
-// FIX: reservar espacio del scrollbar permanentemente para evitar layout shift
-useEffect(() => {
-  document.documentElement.style.scrollbarGutter = "stable";
-  return () => {
-    document.documentElement.style.scrollbarGutter = "";
-  };
-}, []); // ← array vacío: solo al montar/desmontar, no al abrir/cerrar
-
+  // FIX: reservar espacio del scrollbar permanentemente para evitar layout shift
+  useEffect(() => {
+    document.documentElement.style.scrollbarGutter = "stable";
+    return () => {
+      document.documentElement.style.scrollbarGutter = "";
+    };
+  }, []); 
 
   useEffect(() => {
     const handleOutside = (e: MouseEvent) => {
@@ -145,30 +144,30 @@ useEffect(() => {
       <div
         ref={triggerRef}
         onClick={() => { updatePos(); setIsOpen(!isOpen); }}
-        className={`w-full flex items-center gap-3 px-5 py-4 bg-[#0f172a] border rounded-[20px] cursor-pointer transition-all duration-200 select-none shadow-inner group ${
+        className={`w-full flex items-center gap-3 px-5 py-4 bg-slate-50 dark:bg-[#0f172a] border rounded-[20px] cursor-pointer transition-all duration-200 select-none shadow-inner group ${
           hasError
             ? "border-rose-500 ring-2 ring-rose-500/20"
             : isOpen
-            ? "bg-[#131c2f] border-blue-500 ring-4 ring-blue-500/15"
-            : "border-slate-700/80 hover:border-slate-600"
+            ? "bg-white dark:bg-[#131c2f] border-blue-500 ring-4 ring-blue-500/15"
+            : "border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600"
         }`}
       >
         <motion.span
           animate={{ rotate: isOpen ? 10 : 0, scale: isOpen ? 1.1 : 1 }}
           transition={{ duration: 0.2 }}
           className={`material-symbols-rounded text-[22px] shrink-0 transition-colors ${
-            isOpen || value !== 0 ? "text-blue-400" : "text-slate-400 group-hover:text-slate-200"
+            isOpen || value !== 0 ? "text-blue-500 dark:text-blue-400" : "text-slate-400 group-hover:text-slate-500 dark:group-hover:text-slate-200"
           }`}
         >
           {icon}
         </motion.span>
-        <span className={`flex-1 text-[15px] font-medium truncate ${value === 0 ? "text-slate-500" : "text-white"}`}>
+        <span className={`flex-1 text-[15px] font-medium truncate ${value === 0 ? "text-slate-400 dark:text-slate-500" : "text-slate-800 dark:text-white"}`}>
           {selected ? selected.label : placeholder}
         </span>
         <motion.span
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-          className={`material-symbols-rounded text-[20px] shrink-0 ${isOpen ? "text-blue-400" : "text-slate-400"}`}
+          className={`material-symbols-rounded text-[20px] shrink-0 ${isOpen ? "text-blue-500 dark:text-blue-400" : "text-slate-400"}`}
         >
           expand_more
         </motion.span>
@@ -181,9 +180,9 @@ useEffect(() => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.97 }}
             transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
-            className="bg-[#1a2540] border border-slate-700/80 rounded-2xl shadow-[0_24px_48px_-12px_rgba(0,0,0,0.6)] overflow-hidden p-2"
+            className="bg-white dark:bg-[#1a2540] border border-slate-200 dark:border-slate-700/80 rounded-2xl shadow-[0_24px_48px_-12px_rgba(0,0,0,0.2)] dark:shadow-[0_24px_48px_-12px_rgba(0,0,0,0.6)] overflow-hidden p-2"
           >
-            <ul className="max-h-64 overflow-y-auto flex flex-col gap-0.5 pr-1">
+            <ul className="max-h-64 overflow-y-auto flex flex-col gap-0.5 pr-1 comments-scroll">
               {options.length === 0
                 ? <li className="px-4 py-4 text-sm text-slate-500 text-center font-medium">No hay opciones disponibles</li>
                 : options.map((opt, i) => {
@@ -199,14 +198,14 @@ useEffect(() => {
                       whileHover={{ x: 3 }}
                       className={`px-4 py-3 text-[14px] cursor-pointer rounded-xl transition-colors duration-150 flex items-center gap-3 font-semibold ${
                         isSelected
-                          ? "bg-blue-500/15 text-blue-300 border border-blue-500/30"
-                          : "text-slate-200 hover:bg-[#0f172a]/80 border border-transparent"
+                          ? "bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30"
+                          : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#0f172a]/80 border border-transparent"
                       }`}
                     >
                       <motion.span
                         animate={{ scale: isSelected ? 1 : 0.85, opacity: isSelected ? 1 : 0.55 }}
                         transition={{ duration: 0.2 }}
-                        className={`material-symbols-rounded text-[18px] shrink-0 ${isSelected ? "text-blue-400" : "text-slate-300"}`}
+                        className={`material-symbols-rounded text-[18px] shrink-0 ${isSelected ? "text-blue-500 dark:text-blue-400" : "text-slate-400 dark:text-slate-300"}`}
                       >
                         {optIcon}
                       </motion.span>
@@ -218,7 +217,7 @@ useEffect(() => {
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0, opacity: 0 }}
                             transition={{ duration: 0.18, type: "spring", stiffness: 300 }}
-                            className="material-symbols-rounded text-[16px] text-blue-400 ml-auto shrink-0"
+                            className="material-symbols-rounded text-[16px] text-blue-500 dark:text-blue-400 ml-auto shrink-0"
                           >
                             check_circle
                           </motion.span>
@@ -265,16 +264,16 @@ const InputField = ({
   const iconColor = isError
     ? "text-rose-500"
     : focused
-    ? "text-blue-400"
+    ? "text-blue-500 dark:text-blue-400"
     : hovered
-    ? "text-slate-200"
+    ? "text-slate-500 dark:text-slate-200"
     : "text-slate-400";
 
   const borderClass = isError
     ? "border-rose-500 ring-2 ring-rose-500/20"
     : focused
-    ? "bg-[#131c2f] border-blue-500 ring-4 ring-blue-500/15"
-    : "border-slate-700/80 hover:border-slate-600";
+    ? "bg-white dark:bg-[#131c2f] border-blue-500 ring-4 ring-blue-500/15"
+    : "border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600";
 
   return (
     <div
@@ -305,7 +304,7 @@ const InputField = ({
         autoCorrect="off"
         autoCapitalize="off"
         spellCheck={false}
-        className={`w-full ${(hasAt || icon) ? "pl-14" : "pl-5"} ${suffix ? "pr-14" : "pr-5"} py-4 bg-[#0f172a] border rounded-[20px] text-[15px] text-white placeholder:text-slate-500 outline-none transition-all duration-200 font-medium shadow-inner relative z-10 ${borderClass}`}
+        className={`w-full ${(hasAt || icon) ? "pl-14" : "pl-5"} ${suffix ? "pr-14" : "pr-5"} py-4 bg-slate-50 dark:bg-[#0f172a] border rounded-[20px] text-[15px] text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-all duration-200 font-medium shadow-inner relative z-10 ${borderClass}`}
       />
       {suffix && (
         <div className="absolute right-3 top-1/2 -translate-y-1/2 z-20">
@@ -327,26 +326,26 @@ const EmptyFieldsToast = ({ visible, count, onClose }: { visible: boolean; count
         transition={{ type: "spring", stiffness: 380, damping: 28 }}
         className="fixed bottom-8 left-1/2 z-[9999] -translate-x-1/2 pointer-events-auto"
       >
-        <div className="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-[#1e293b] border border-rose-500/30 shadow-[0_8px_32px_-8px_rgba(244,63,94,0.4)] backdrop-blur-md min-w-[300px]">
+        <div className="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-white dark:bg-[#1e293b] border border-rose-200 dark:border-rose-500/30 shadow-[0_8px_32px_-8px_rgba(244,63,94,0.4)] backdrop-blur-md min-w-[300px]">
           <motion.div
             animate={{ rotate: [0, -8, 8, -5, 5, 0] }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="w-8 h-8 rounded-xl bg-rose-500/15 flex items-center justify-center shrink-0"
+            className="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-500/15 flex items-center justify-center shrink-0"
           >
-            <span className="material-symbols-rounded text-[18px] text-rose-400">warning</span>
+            <span className="material-symbols-rounded text-[18px] text-rose-500 dark:text-rose-400">warning</span>
           </motion.div>
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-bold text-white leading-tight">
+            <p className="text-[13px] font-bold text-slate-900 dark:text-white leading-tight">
               {count === 1 ? "Falta 1 campo requerido" : `Faltan ${count} campos requeridos`}
             </p>
-            <p className="text-[11px] text-slate-400 mt-0.5">Completa los campos marcados para continuar</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Completa los campos marcados para continuar</p>
           </div>
           <motion.button
             whileHover={{ scale: 1.15, rotate: 90 }}
             whileTap={{ scale: 0.9 }}
             transition={{ duration: 0.18 }}
             onClick={onClose}
-            className="w-6 h-6 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-300 hover:bg-slate-700/50 transition-colors shrink-0"
+            className="w-6 h-6 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors shrink-0"
           >
             <span className="material-symbols-rounded text-[16px]">close</span>
           </motion.button>
@@ -375,7 +374,7 @@ const SuccessScreen = ({ username }: { username: string }) => (
       {[0, 0.55, 1.1].map((delay, i) => (
         <motion.div
           key={i}
-          className="absolute rounded-[32px] border border-emerald-400/20"
+          className="absolute rounded-[32px] border border-emerald-400/30 dark:border-emerald-400/20"
           style={{ inset: -(i + 1) * 12 }}
           initial={{ opacity: 0 }}
           animate={{ opacity: [0, 0.7, 0], scale: [0.85, 1.15, 1.35] }}
@@ -415,7 +414,7 @@ const SuccessScreen = ({ username }: { username: string }) => (
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.36, duration: 0.4 }}
-      className="text-4xl font-extrabold text-white tracking-tight mb-3 text-center z-10"
+      className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-3 text-center z-10"
     >
       ¡Perfil Creado!
     </motion.h2>
@@ -424,14 +423,14 @@ const SuccessScreen = ({ username }: { username: string }) => (
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.46, duration: 0.38 }}
-      className="text-slate-400 text-[16px] text-center max-w-sm leading-relaxed z-10"
+      className="text-slate-600 dark:text-slate-400 text-[16px] text-center max-w-sm leading-relaxed z-10"
     >
       El usuario{" "}
       <motion.span
         initial={{ opacity: 0, scale: 0.85 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.6, type: "spring", stiffness: 300 }}
-        className="font-bold text-blue-400"
+        className="font-bold text-blue-600 dark:text-blue-400"
       >
         @{username}
       </motion.span>{" "}
@@ -443,10 +442,10 @@ const SuccessScreen = ({ username }: { username: string }) => (
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.68, duration: 0.35 }}
-      className="flex items-center gap-2 mt-8 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 z-10"
+      className="flex items-center gap-2 mt-8 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 z-10"
     >
-      <span className="material-symbols-rounded text-[14px] text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
-      <span className="text-[12px] font-bold text-emerald-400 tracking-wide">Cuenta activa</span>
+      <span className="material-symbols-rounded text-[14px] text-emerald-500 dark:text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
+      <span className="text-[12px] font-bold text-emerald-600 dark:text-emerald-400 tracking-wide">Cuenta activa</span>
     </motion.div>
 
     {/* Redirect */}
@@ -459,7 +458,7 @@ const SuccessScreen = ({ username }: { username: string }) => (
       <motion.span
         animate={{ rotate: 360 }}
         transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-        className="material-symbols-rounded text-[15px] text-slate-500"
+        className="material-symbols-rounded text-[15px] text-slate-400 dark:text-slate-500"
       >
         progress_activity
       </motion.span>
@@ -611,14 +610,14 @@ export const CreateUser = () => {
 
   if (CURRENT_USER_ID !== 33) {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh] text-slate-500">
+      <div className="flex flex-col items-center justify-center h-[60vh] text-slate-900 dark:text-slate-500">
         <span className="material-symbols-rounded text-6xl mb-4 text-rose-500 opacity-80">lock</span>
-        <h2 className="text-2xl font-bold text-white">Acceso Restringido</h2>
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Acceso Restringido</h2>
       </div>
     );
   }
 
-  const labelStyle = "text-[11px] font-extrabold uppercase tracking-widest text-slate-400 ml-2 group-focus-within:text-blue-500 transition-colors";
+  const labelStyle = "text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 ml-2 group-focus-within:text-blue-500 transition-colors";
 
   return (
     <>
@@ -633,12 +632,12 @@ export const CreateUser = () => {
         {/* HEADER */}
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="flex items-center gap-5 px-2">
           <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => navigate('/users')}
-            className="w-12 h-12 rounded-full bg-[#1e293b] border border-slate-700 flex items-center justify-center text-slate-400 hover:bg-[#0f172a] hover:text-white transition-all shadow-md">
+            className="w-12 h-12 rounded-full bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#0f172a] hover:text-slate-900 dark:hover:text-white transition-all shadow-md">
             <span className="material-symbols-rounded text-[22px]">arrow_back</span>
           </motion.button>
           <div className="flex-1">
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white">Nuevo Usuario</h1>
-            <p className="text-slate-400 text-[15px] mt-1.5 font-medium">Registra un nuevo colaborador en el ecosistema.</p>
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white">Nuevo Usuario</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-[15px] mt-1.5 font-medium">Registra un nuevo colaborador en el ecosistema.</p>
           </div>
           <AnimatePresence>
             {hasAnyData && (
@@ -651,7 +650,7 @@ export const CreateUser = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.93 }}
                 onClick={handleClear}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-700 bg-[#1e293b] text-slate-400 hover:text-rose-400 hover:border-rose-500/40 hover:bg-rose-500/5 transition-all text-[13px] font-bold tracking-wide"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1e293b] text-slate-500 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 hover:border-rose-200 dark:hover:border-rose-500/40 hover:bg-rose-50 dark:hover:bg-rose-500/5 transition-all text-[13px] font-bold tracking-wide shadow-sm"
               >
                 <motion.span
                   className="material-symbols-rounded text-[18px]"
@@ -668,16 +667,16 @@ export const CreateUser = () => {
 
         <div className="relative">
           {isLoadingLists && (
-            <div className="absolute inset-0 bg-[#0f172a]/80 backdrop-blur-md z-50 flex items-center justify-center rounded-[32px]">
+            <div className="absolute inset-0 bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md z-50 flex items-center justify-center rounded-[32px]">
               <div className="flex flex-col items-center gap-4">
                 <span className="material-symbols-rounded animate-spin text-4xl text-blue-500">progress_activity</span>
-                <p className="text-sm font-bold text-slate-300 tracking-wide uppercase">Sincronizando...</p>
+                <p className="text-sm font-bold text-slate-700 dark:text-slate-300 tracking-wide uppercase">Sincronizando...</p>
               </div>
             </div>
           )}
 
           {isSuccess ? (
-            <Card className="shadow-2xl bg-[#1e293b] border border-slate-800 rounded-[32px] overflow-hidden">
+            <Card className="shadow-2xl bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-[32px] overflow-hidden">
               <SuccessScreen username={formData.sUser} />
             </Card>
           ) : (
@@ -687,10 +686,10 @@ export const CreateUser = () => {
                 {statusMessage && statusMessage.type === 'error' && (
                   <motion.div initial={{ opacity: 0, height: 0, y: -10 }} animate={{ opacity: 1, height: "auto", y: 0 }}
                     exit={{ opacity: 0, height: 0, y: -10 }} className="overflow-hidden">
-                    <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 p-4 rounded-2xl flex items-center gap-3 shadow-lg">
+                    <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-400 p-4 rounded-2xl flex items-center gap-3 shadow-sm dark:shadow-lg">
                       <span className="material-symbols-rounded shrink-0">error</span>
                       <p className="font-medium text-sm">{statusMessage.text}</p>
-                      <button type="button" onClick={() => setStatusMessage(null)} className="ml-auto hover:text-rose-300 transition-colors">
+                      <button type="button" onClick={() => setStatusMessage(null)} className="ml-auto hover:text-rose-800 dark:hover:text-rose-300 transition-colors">
                         <span className="material-symbols-rounded text-[18px]">close</span>
                       </button>
                     </div>
@@ -700,7 +699,7 @@ export const CreateUser = () => {
 
               {/* SECCIÓN 1 */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
-                <Card className="p-8 md:p-10 shadow-xl bg-[#1e293b] border border-slate-800 rounded-[32px] overflow-visible">
+                <Card className="p-8 md:p-10 shadow-xl bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-[32px] overflow-visible">
                   <div className="flex flex-col md:flex-row gap-8">
                     <div className="md:w-1/3 flex flex-col items-center md:items-start text-center md:text-left pt-2">
                       <div className="relative w-24 h-24 mb-6">
@@ -708,7 +707,7 @@ export const CreateUser = () => {
                           className="absolute inset-0 rounded-[24px]"
                           animate={{
                             background: `linear-gradient(135deg, ${avatarColor.from}, ${avatarColor.to})`,
-                            boxShadow: `0 10px 36px -8px ${avatarColor.shadow}, 0 0 0 4px #1e293b, 0 0 0 5px ${avatarColor.from}30`,
+                            boxShadow: `0 10px 36px -8px ${avatarColor.shadow}, 0 0 0 4px var(--tw-prose-body, transparent), 0 0 0 5px ${avatarColor.from}30`,
                           }}
                           transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
                         />
@@ -728,8 +727,8 @@ export const CreateUser = () => {
                           </AnimatePresence>
                         </div>
                       </div>
-                      <h2 className="text-xl font-extrabold text-white tracking-tight">Cuenta de Usuario</h2>
-                      <p className="text-sm text-slate-400 font-medium mt-2 leading-relaxed">Configura la identidad y credenciales de acceso para el nuevo colaborador.</p>
+                      <h2 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">Cuenta de Usuario</h2>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-2 leading-relaxed">Configura la identidad y credenciales de acceso para el nuevo colaborador.</p>
                     </div>
 
                     <div className="md:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
@@ -784,7 +783,7 @@ export const CreateUser = () => {
                                   whileHover={{ scale: 1.12 }}
                                   whileTap={{ scale: 0.9 }}
                                   onClick={() => setShowPassword(!showPassword)}
-                                  className="p-1.5 text-slate-500 hover:text-blue-400 rounded-xl transition-all duration-200"
+                                  className="p-1.5 text-slate-400 hover:text-blue-500 rounded-xl transition-all duration-200"
                                 >
                                   <span className="material-symbols-rounded text-[22px] block">
                                     {showPassword ? 'visibility_off' : 'visibility'}
@@ -803,14 +802,14 @@ export const CreateUser = () => {
 
               {/* SECCIÓN 2 */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
-                <Card className="p-8 md:p-10 shadow-xl bg-[#1e293b] border border-slate-800 rounded-[32px] overflow-visible">
+                <Card className="p-8 md:p-10 shadow-xl bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-[32px] overflow-visible">
                   <div className="flex flex-col md:flex-row gap-8">
                     <div className="md:w-1/3 flex flex-col items-center md:items-start text-center md:text-left pt-2">
-                      <div className="w-16 h-16 rounded-2xl bg-orange-500/10 border border-orange-500/20 text-orange-500 flex items-center justify-center shadow-inner mb-6">
+                      <div className="w-16 h-16 rounded-2xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 text-orange-500 flex items-center justify-center shadow-inner mb-6">
                         <span className="material-symbols-rounded text-3xl">work_outline</span>
                       </div>
-                      <h2 className="text-xl font-extrabold text-white tracking-tight">Rol y Ubicación</h2>
-                      <p className="text-sm text-slate-400 font-medium mt-2 leading-relaxed">Define los permisos del usuario y asígnale un área de trabajo.</p>
+                      <h2 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">Rol y Ubicación</h2>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-2 leading-relaxed">Define los permisos del usuario y asígnale un área de trabajo.</p>
                     </div>
 
                     <div className="md:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
@@ -858,15 +857,15 @@ export const CreateUser = () => {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.4 }}
                 className="flex flex-col-reverse sm:flex-row items-center justify-end gap-4 mt-2">
                 <motion.button type="button" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => navigate('/users')}
-                  className="w-full sm:w-auto px-8 py-4 rounded-full border border-slate-700 text-[15px] font-bold text-slate-400 hover:bg-[#1e293b] hover:text-white hover:border-slate-600 transition-all shadow-sm">
+                  className="w-full sm:w-auto px-8 py-4 rounded-full border border-slate-300 dark:border-slate-700 text-[15px] font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1e293b] hover:text-slate-900 dark:hover:text-white hover:border-slate-400 dark:hover:border-slate-600 transition-all shadow-sm">
                   Cancelar
                 </motion.button>
                 <motion.button type="submit" whileHover={!isSubmitting ? { scale: 1.02 } : {}} whileTap={!isSubmitting ? { scale: 0.98 } : {}}
                   disabled={isSubmitting || isLoadingLists}
                   className={`w-full sm:w-auto px-10 py-4 rounded-full font-bold text-[15px] flex items-center justify-center gap-2 transition-all ${
                     isSubmitting || isLoadingLists
-                      ? "bg-[#1e293b] text-slate-500 cursor-not-allowed border border-slate-800 shadow-none"
-                      : "bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] border border-blue-500/50"
+                      ? "bg-slate-100 dark:bg-[#1e293b] text-slate-400 dark:text-slate-500 cursor-not-allowed border border-transparent dark:border-slate-800 shadow-none"
+                      : "bg-blue-600 hover:bg-blue-500 text-white shadow-[0_8px_20px_rgba(37,99,235,0.2)] dark:shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_10px_25px_rgba(37,99,235,0.3)] dark:hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] border border-blue-500/50"
                   }`}>
                   {isSubmitting
                     ? <><span className="material-symbols-rounded animate-spin text-[22px]">progress_activity</span><span>Creando Perfil...</span></>

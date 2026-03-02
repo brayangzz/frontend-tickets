@@ -76,7 +76,7 @@ const usePortalPos = () => {
   return { triggerRef, pos, updatePos };
 };
 
-// ─── CustomSelect Premium ────────────────────────────────────────────────────
+// ─── CustomSelect Premium (AHORA ADAPTABLE A LIGHT/DARK MODE) ────────────────
 const CustomSelect = ({ value, onChange, options, placeholder, icon }: any) => {
   const [isOpen, setIsOpen] = useState(false);
   const { triggerRef, pos, updatePos } = usePortalPos();
@@ -106,35 +106,35 @@ const CustomSelect = ({ value, onChange, options, placeholder, icon }: any) => {
       <motion.div 
         ref={triggerRef} 
         onClick={() => { updatePos(); setIsOpen(!isOpen); }}
-        className={`relative w-full h-[60px] flex items-center justify-between pl-[52px] pr-4 bg-[#0f172a] border rounded-[20px] cursor-pointer transition-all duration-300 select-none shadow-inner group ${
-          isOpen ? "bg-[#131c2f] border-blue-500 ring-4 ring-blue-500/15" : "border-slate-700/80 hover:border-slate-600"
+        className={`relative w-full h-[60px] flex items-center justify-between pl-[52px] pr-4 bg-slate-50 dark:bg-[#0f172a] border rounded-[20px] cursor-pointer transition-all duration-300 select-none shadow-inner group ${
+          isOpen ? "bg-white dark:bg-[#131c2f] border-blue-500 ring-4 ring-blue-500/15" : "border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600"
         }`}>
         
         {/* ICONO */}
         {selectedOption && selectedOption.icon ? (
-           <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 z-20 text-blue-500 text-[22px] transition-colors">{selectedOption.icon}</span>
+           <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 z-20 text-blue-600 dark:text-blue-500 text-[22px] transition-colors">{selectedOption.icon}</span>
         ) : (
-           <span className={`material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 z-20 transition-colors text-[22px] ${isOpen || value !== "all" ? "text-blue-500" : "text-slate-500 group-hover:text-blue-400"}`}>{icon}</span>
+           <span className={`material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 z-20 transition-colors text-[22px] ${isOpen || value !== "all" ? "text-blue-600 dark:text-blue-500" : "text-slate-400 group-hover:text-slate-500 dark:group-hover:text-blue-400"}`}>{icon}</span>
         )}
 
         {/* ETIQUETA Y VALOR */}
         <div className="flex flex-col justify-center h-full w-full relative">
-            <span className={`absolute left-0 transition-all duration-200 pointer-events-none z-20 font-bold uppercase tracking-wider text-[10px] ${isOpen ? 'text-blue-500' : 'text-slate-400'} top-[6px]`}>
+            <span className={`absolute left-0 transition-all duration-200 pointer-events-none z-20 font-bold uppercase tracking-wider text-[10px] ${isOpen ? 'text-blue-600 dark:text-blue-500' : 'text-slate-500 dark:text-slate-400'} top-[6px]`}>
                 {placeholder}
             </span>
-            <span className="text-[15px] font-medium truncate transition-opacity duration-200 mt-3 text-white">
+            <span className="text-[15px] font-medium truncate transition-opacity duration-200 mt-3 text-slate-800 dark:text-white">
               {selectedOption ? selectedOption.label : ''}
             </span>
         </div>
         
-        <span className={`material-symbols-rounded text-[20px] shrink-0 transition-all duration-500 ${isOpen ? "rotate-180 text-blue-500" : "text-slate-500"}`}>expand_more</span>
+        <span className={`material-symbols-rounded text-[20px] shrink-0 transition-all duration-500 ${isOpen ? "rotate-180 text-blue-600 dark:text-blue-500" : "text-slate-400 dark:text-slate-500"}`}>expand_more</span>
       </motion.div>
 
       {isOpen && createPortal(
         <div ref={dropdownRef} style={{ position: "absolute", top: pos.top, left: pos.left, width: Math.max(pos.width, 260), zIndex: 99999 }}>
           <motion.div initial={{ opacity: 0, y: -10, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.97 }} transition={{ duration: 0.2, ease: "easeOut" }}
-            className="bg-[#1e293b] border border-slate-700 rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] overflow-hidden p-2">
+            className="bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] overflow-hidden p-2">
             <ul className="max-h-64 overflow-y-auto flex flex-col gap-1 pr-1 comments-scroll">
               {options.length === 0
                 ? <li className="px-4 py-4 text-sm text-slate-500 text-center font-medium">No hay opciones</li>
@@ -143,10 +143,10 @@ const CustomSelect = ({ value, onChange, options, placeholder, icon }: any) => {
                     return (
                       <li key={opt.value} onClick={() => { onChange(opt.value); setIsOpen(false); }}
                         className={`px-4 py-3.5 text-[14px] cursor-pointer rounded-xl transition-colors duration-200 flex items-center gap-3 font-bold group ${
-                          isSelected ? "bg-blue-600/20 text-blue-400 border border-blue-500/30 shadow-inner" : "text-slate-300 hover:bg-[#0f172a] border border-transparent"
+                          isSelected ? "bg-blue-50 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 shadow-inner" : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#0f172a] border border-transparent"
                         }`}>
-                        <span className={`material-symbols-rounded text-[18px] transition-all duration-300 ${isSelected ? "opacity-100 text-blue-400 scale-110" : "opacity-0 scale-75"}`}>check</span>
-                        {opt.icon && <span className={`material-symbols-rounded text-[20px] transition-colors ${isSelected ? 'text-blue-400' : 'text-slate-500 group-hover:text-slate-400'}`}>{opt.icon}</span>}
+                        <span className={`material-symbols-rounded text-[18px] transition-all duration-300 ${isSelected ? "opacity-100 text-blue-600 dark:text-blue-400 scale-110" : "opacity-0 scale-75"}`}>check</span>
+                        {opt.icon && <span className={`material-symbols-rounded text-[20px] transition-colors ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-400'}`}>{opt.icon}</span>}
                         <div className="flex flex-col min-w-0 flex-1">
                           <span className="truncate tracking-wide">{opt.label}</span>
                         </div>
