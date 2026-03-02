@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { Sidebar, MobileSidebar } from "./Sidebar"; // Importamos ambos
+import { SessionExpiredModal } from "../modals/SessionExpiredModal";
 
 export const AppLayout = () => {
   // Estado para controlar si el menú móvil está abierto
@@ -45,6 +46,7 @@ export const AppLayout = () => {
          </div>
 
       </main>
+      <SessionExpiredModal />
     </div>
   );
 };
