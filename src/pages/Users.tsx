@@ -64,7 +64,7 @@ const getDeptIcon = (dept: string) => {
 
 // ─── Utilidad para calcular posición del portal ───
 const usePortalPos = () => {
-  const triggerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
 
   const updatePos = () => {
@@ -76,7 +76,7 @@ const usePortalPos = () => {
   return { triggerRef, pos, updatePos };
 };
 
-// ─── CustomSelect Premium (AHORA ADAPTABLE A LIGHT/DARK MODE) ────────────────
+// ─── CustomSelect Premium ────────────────
 const CustomSelect = ({ value, onChange, options, placeholder, icon }: any) => {
   const [isOpen, setIsOpen] = useState(false);
   const { triggerRef, pos, updatePos } = usePortalPos();
@@ -103,9 +103,10 @@ const CustomSelect = ({ value, onChange, options, placeholder, icon }: any) => {
 
   return (
     <>
-      <motion.div 
+      <motion.button 
         ref={triggerRef} 
-        onClick={() => { updatePos(); setIsOpen(!isOpen); }}
+        type="button"
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); updatePos(); setIsOpen(!isOpen); }}
         className={`relative w-full h-[60px] flex items-center justify-between pl-[52px] pr-4 bg-slate-50 dark:bg-[#0f172a] border rounded-[20px] cursor-pointer transition-all duration-300 select-none shadow-inner group ${
           isOpen ? "bg-white dark:bg-[#131c2f] border-blue-500 ring-4 ring-blue-500/15" : "border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600"
         }`}>
@@ -118,7 +119,7 @@ const CustomSelect = ({ value, onChange, options, placeholder, icon }: any) => {
         )}
 
         {/* ETIQUETA Y VALOR */}
-        <div className="flex flex-col justify-center h-full w-full relative">
+        <div className="flex flex-col items-start justify-center h-full w-full relative">
             <span className={`absolute left-0 transition-all duration-200 pointer-events-none z-20 font-bold uppercase tracking-wider text-[10px] ${isOpen ? 'text-blue-600 dark:text-blue-500' : 'text-slate-500 dark:text-slate-400'} top-[6px]`}>
                 {placeholder}
             </span>
@@ -128,7 +129,7 @@ const CustomSelect = ({ value, onChange, options, placeholder, icon }: any) => {
         </div>
         
         <span className={`material-symbols-rounded text-[20px] shrink-0 transition-all duration-500 ${isOpen ? "rotate-180 text-blue-600 dark:text-blue-500" : "text-slate-400 dark:text-slate-500"}`}>expand_more</span>
-      </motion.div>
+      </motion.button>
 
       {isOpen && createPortal(
         <div ref={dropdownRef} style={{ position: "absolute", top: pos.top, left: pos.left, width: Math.max(pos.width, 260), zIndex: 99999 }}>
@@ -201,17 +202,25 @@ export const Users = () => {
   const [exportRoleFilter, setExportRoleFilter] = useState("all");
   const [exportDeptFilter, setExportDeptFilter] = useState("all");
 
-  // Carga de datos
+  // Carga de datos SEGURA
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
+        const token = localStorage.getItem('token');
+        const headers = token ? { "Authorization": `Bearer ${token}` } : undefined;
+
         const [usersRes, deptsRes] = await Promise.all([
-          fetch("https://tickets-backend-api-gxbkf5enbafxcvb2.francecentral-01.azurewebsites.net/api/general/users"),
-          fetch("https://tickets-backend-api-gxbkf5enbafxcvb2.francecentral-01.azurewebsites.net/api/general/departments"),
+          fetch("https://tickets-backend-api-gxbkf5enbafxcvb2.francecentral-01.azurewebsites.net/api/general/users", { headers }),
+          fetch("https://tickets-backend-api-gxbkf5enbafxcvb2.francecentral-01.azurewebsites.net/api/general/departments", { headers }),
         ]);
-        setUsers(await usersRes.json());
-        setDepartments(await deptsRes.json());
+
+        const usersData = await usersRes.json();
+        const deptsData = await deptsRes.json();
+
+        setUsers(Array.isArray(usersData) ? usersData : (usersData?.data || usersData?.result || []));
+        setDepartments(Array.isArray(deptsData) ? deptsData : (deptsData?.data || deptsData?.result || []));
+
       } catch (error) {
         console.error("Error al cargar datos:", error);
       } finally {
@@ -231,10 +240,14 @@ export const Users = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const uniqueRoles = useMemo(() => [...new Set(users.map((u) => u.roleName).filter(Boolean))], [users]);
+  const uniqueRoles = useMemo(() => {
+    if (!Array.isArray(users)) return [];
+    return [...new Set(users.map((u) => u.roleName).filter(Boolean))];
+  }, [users]);
 
   // Usuarios filtrados para la tabla principal
   const filteredUsers = useMemo(() => {
+    if (!Array.isArray(users)) return [];
     return users.filter((user) => {
       const matchSearch =
         (user.employeeName?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
@@ -261,6 +274,7 @@ export const Users = () => {
 
   // Usuarios filtrados ESPECÍFICAMENTE para la exportación
   const usersToExport = useMemo(() => {
+    if (!Array.isArray(users)) return [];
     return users.filter((user) => {
       const matchRole = exportRoleFilter === "all" || user.roleName === exportRoleFilter;
       const matchDept = exportDeptFilter === "all" || user.departmentName === exportDeptFilter;
@@ -381,6 +395,23 @@ export const Users = () => {
     ...departments.map(d => ({ value: d.sDepartment, label: d.sDepartment, icon: getDeptIcon(d.sDepartment) }))
   ];
 
+  // VARIANTE DE ANIMACIÓN TIPADA COMO ANY PARA EVITAR ERRORES TS
+  const containerVariants: any = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05, 
+      }
+    }
+  };
+
+  const itemVariants: any = {
+    hidden: { opacity: 0, y: 15 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
+    exit: { opacity: 0, scale: 0.95, transition: { duration: 0.2 } }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -425,7 +456,7 @@ export const Users = () => {
         </div>
       </motion.div>
 
-      {/* TOOLBAR PÍLDORA (Ahora adaptable en móviles) */}
+      {/* TOOLBAR PÍLDORA */}
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
@@ -444,20 +475,22 @@ export const Users = () => {
           />
         </div>
 
-        {/* Filtros + Reset (Responsivos) */}
+        {/* Filtros + Reset */}
         <div className="flex gap-2 w-full lg:w-auto shrink-0">
           
-          {/* Filtro Rol */}
-          <div className="relative flex-1 lg:flex-none" ref={roleRef}>
+          {/* Filtro Rol - SE AÑADIÓ min-w-0 */}
+          <div className="relative flex-1 min-w-0 lg:flex-none" ref={roleRef}>
             <motion.button
+              type="button"
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-              onClick={() => setIsRoleOpen(!isRoleOpen)}
-              className={`flex items-center justify-between gap-2 h-12 w-full lg:w-auto px-4 sm:px-6 rounded-full border bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm ${isRoleOpen ? "border-blue-500 ring-2 ring-blue-500/20" : "border-slate-200 dark:border-slate-700"}`}
+              onClick={(e) => { e.preventDefault(); setIsRoleOpen(!isRoleOpen); }}
+              // Padding y gap reducidos en móvil para evitar empujar otros elementos
+              className={`flex items-center justify-between gap-1.5 sm:gap-3 h-12 w-full lg:w-auto px-3 sm:px-5 rounded-full border bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm ${isRoleOpen ? "border-blue-500 ring-2 ring-blue-500/20" : "border-slate-200 dark:border-slate-700"}`}
             >
               <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200 truncate">
                 {selectedRole === "all" ? "Rol" : selectedRole}
               </span>
-              <span className="material-symbols-rounded text-slate-400 shrink-0" style={{ transform: isRoleOpen ? "rotate(180deg)" : "none" }}>expand_more</span>
+              <span className="material-symbols-rounded text-slate-400 shrink-0 text-[18px] sm:text-[24px]" style={{ transform: isRoleOpen ? "rotate(180deg)" : "none" }}>expand_more</span>
             </motion.button>
             <AnimatePresence>
               {isRoleOpen && (
@@ -466,9 +499,9 @@ export const Users = () => {
                   className="absolute left-0 lg:right-0 mt-2 w-56 sm:w-60 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden z-[100] p-2"
                 >
                   <div className="flex flex-col gap-1 max-h-60 overflow-y-auto comments-scroll">
-                    <button onClick={() => { setSelectedRole("all"); setIsRoleOpen(false); }} className={`px-4 py-2.5 rounded-xl text-left text-sm font-bold transition-all ${selectedRole === "all" ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>Todos los roles</button>
+                    <button type="button" onClick={() => { setSelectedRole("all"); setIsRoleOpen(false); }} className={`px-4 py-2.5 rounded-xl text-left text-sm font-bold transition-all ${selectedRole === "all" ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>Todos los roles</button>
                     {uniqueRoles.map((role) => (
-                      <button key={role} onClick={() => { setSelectedRole(role); setIsRoleOpen(false); }} className={`px-4 py-2.5 rounded-xl text-left text-sm font-bold transition-all ${selectedRole === role ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>{role}</button>
+                      <button type="button" key={role} onClick={() => { setSelectedRole(role); setIsRoleOpen(false); }} className={`px-4 py-2.5 rounded-xl text-left text-sm font-bold transition-all ${selectedRole === role ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>{role}</button>
                     ))}
                   </div>
                 </motion.div>
@@ -476,17 +509,19 @@ export const Users = () => {
             </AnimatePresence>
           </div>
 
-          {/* Filtro Departamento */}
-          <div className="relative flex-1 lg:flex-none" ref={deptRef}>
+          {/* Filtro Departamento - SE AÑADIÓ min-w-0 */}
+          <div className="relative flex-1 min-w-0 lg:flex-none" ref={deptRef}>
             <motion.button
+              type="button"
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-              onClick={() => setIsDeptOpen(!isDeptOpen)}
-              className={`flex items-center justify-between gap-2 h-12 w-full lg:w-auto px-4 sm:px-6 rounded-full border bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm ${isDeptOpen ? "border-blue-500 ring-2 ring-blue-500/20" : "border-slate-200 dark:border-slate-700"}`}
+              onClick={(e) => { e.preventDefault(); setIsDeptOpen(!isDeptOpen); }}
+              // Padding y gap reducidos en móvil para evitar empujar otros elementos
+              className={`flex items-center justify-between gap-1.5 sm:gap-3 h-12 w-full lg:w-auto px-3 sm:px-5 rounded-full border bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm ${isDeptOpen ? "border-blue-500 ring-2 ring-blue-500/20" : "border-slate-200 dark:border-slate-700"}`}
             >
               <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200 truncate">
                 {selectedDept === "all" ? "Depto." : selectedDept}
               </span>
-              <span className="material-symbols-rounded text-slate-400 shrink-0" style={{ transform: isDeptOpen ? "rotate(180deg)" : "none" }}>expand_more</span>
+              <span className="material-symbols-rounded text-slate-400 shrink-0 text-[18px] sm:text-[24px]" style={{ transform: isDeptOpen ? "rotate(180deg)" : "none" }}>expand_more</span>
             </motion.button>
             <AnimatePresence>
               {isDeptOpen && (
@@ -495,9 +530,9 @@ export const Users = () => {
                   className="absolute right-0 mt-2 w-56 sm:w-64 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden z-[100] p-2"
                 >
                   <div className="flex flex-col gap-1 max-h-60 overflow-y-auto comments-scroll">
-                    <button onClick={() => { setSelectedDept("all"); setIsDeptOpen(false); }} className={`px-4 py-2.5 rounded-xl text-left text-sm font-bold transition-all ${selectedDept === "all" ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>Todos los departamentos</button>
+                    <button type="button" onClick={() => { setSelectedDept("all"); setIsDeptOpen(false); }} className={`px-4 py-2.5 rounded-xl text-left text-sm font-bold transition-all ${selectedDept === "all" ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>Todos los departamentos</button>
                     {departments.map((d) => (
-                      <button key={d.iIdDepartment} onClick={() => { setSelectedDept(d.sDepartment); setIsDeptOpen(false); }} className={`px-4 py-2.5 rounded-xl text-left text-sm font-bold transition-all ${selectedDept === d.sDepartment ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>{d.sDepartment}</button>
+                      <button type="button" key={d.iIdDepartment} onClick={() => { setSelectedDept(d.sDepartment); setIsDeptOpen(false); }} className={`px-4 py-2.5 rounded-xl text-left text-sm font-bold transition-all ${selectedDept === d.sDepartment ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>{d.sDepartment}</button>
                     ))}
                   </div>
                 </motion.div>
@@ -505,19 +540,27 @@ export const Users = () => {
             </AnimatePresence>
           </div>
 
-          {/* Reset */}
-          <motion.button
-            onClick={() => { setSearchTerm(""); setSelectedRole("all"); setSelectedDept("all"); }}
-            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-            className="w-12 h-12 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full border border-slate-200 dark:border-slate-700 text-slate-500 transition-colors shrink-0"
-            title="Reiniciar filtros"
-          >
-            <span className="material-symbols-rounded text-[20px]">restart_alt</span>
-          </motion.button>
+          {/* Reset animado */}
+          <AnimatePresence>
+            {(searchTerm !== "" || selectedRole !== "all" || selectedDept !== "all") && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.5, width: 0, marginLeft: 0 }} 
+                animate={{ opacity: 1, scale: 1, width: 48, marginLeft: 8 }} 
+                exit={{ opacity: 0, scale: 0.5, width: 0, marginLeft: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                onClick={() => { setSearchTerm(""); setSelectedRole("all"); setSelectedDept("all"); }}
+                whileHover={{ scale: 1.05, rotate: 180 }} whileTap={{ scale: 0.95 }}
+                className="w-12 h-12 flex items-center justify-center bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 rounded-full border border-rose-200 dark:border-rose-500/30 text-rose-500 dark:text-rose-400 transition-colors shrink-0 overflow-hidden"
+                title="Limpiar filtros"
+              >
+                <span className="material-symbols-rounded text-[20px]">filter_alt_off</span>
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
       </motion.div>
 
-      {/* TABLA */}
+      {/* TABLA CON STAGGER DIRECTO (EFECTO CASCADA SEGURO) */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}>
         <Card className="overflow-hidden shadow-xl bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-[24px] p-0">
           <div className="overflow-x-auto min-h-[400px]">
@@ -532,11 +575,19 @@ export const Users = () => {
                   <th className="px-8 py-5 text-right print:hidden">Acciones</th>
                 </tr>
               </thead>
+              
               <tbody className="text-sm bg-white dark:bg-[#1e293b]">
                 <AnimatePresence mode="popLayout">
                   {isLoading ? (
-                    [...Array(5)].map((_, i) => (
-                      <motion.tr key={`skel-${i}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="border-b border-slate-100 dark:border-slate-800/50">
+                    [...Array(5)].map((_, index) => (
+                      <motion.tr 
+                        key={`skel-${index}`} 
+                        initial={{ opacity: 0, y: 15 }} 
+                        animate={{ opacity: 1, y: 0 }} 
+                        exit={{ opacity: 0 }} 
+                        transition={{ duration: 0.3, delay: index * 0.04, ease: "easeOut" }}
+                        className="border-b border-slate-100 dark:border-slate-800/50"
+                      >
                         <td className="px-8 py-6"><div className="flex items-center gap-3"><Skeleton className="w-10 h-10 rounded-full" /><Skeleton className="h-4 w-36 rounded" /></div></td>
                         <td className="px-6 py-6"><Skeleton className="h-4 w-24 rounded" /></td>
                         <td className="px-6 py-6"><Skeleton className="h-6 w-20 rounded-full" /></td>
@@ -559,12 +610,12 @@ export const Users = () => {
                   ) : (
                     paginatedUsers.map((user, index) => (
                       <motion.tr
-                        layout
+                        layout="position"
                         key={user.iIdUser}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.25, delay: index * 0.04, ease: "easeOut" }}
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.3, delay: index * 0.04, ease: "easeOut" }}
                         className="group border-b border-slate-100 dark:border-slate-800/60 last:border-0 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors duration-200"
                       >
                         {/* Empleado */}
@@ -688,7 +739,7 @@ export const Users = () => {
             key="export-overlay"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-0"
           >
             <motion.div
               key="export-content"
@@ -696,21 +747,21 @@ export const Users = () => {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.93, opacity: 0, y: 12 }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="relative w-full max-w-lg bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700/60 rounded-[32px] shadow-2xl overflow-visible flex flex-col p-8 md:p-10"
+              className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto comments-scroll bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700/60 rounded-[28px] sm:rounded-[32px] shadow-2xl flex flex-col p-6 sm:p-8 md:p-10"
             >
               {/* Header */}
-              <div className="flex flex-col items-center text-center mb-8">
-                <div className="w-16 h-16 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-[20px] flex items-center justify-center mb-4 shadow-inner border border-blue-100 dark:border-blue-500/20">
-                  <span className="material-symbols-rounded text-4xl">cloud_download</span>
+              <div className="flex flex-col items-center text-center mb-6 sm:mb-8">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-[20px] flex items-center justify-center mb-3 sm:mb-4 shadow-inner border border-blue-100 dark:border-blue-500/20">
+                  <span className="material-symbols-rounded text-3xl sm:text-4xl">cloud_download</span>
                 </div>
-                <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">Exportar Directorio</h2>
-                <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Exportar Directorio</h2>
+                <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1 sm:mt-2">
                   Configura los filtros y selecciona el formato.
                 </p>
               </div>
 
               {/* Filtros dentro del Modal (Con CustomSelect Premium) */}
-              <div className="flex flex-col gap-5 mb-8">
+              <div className="flex flex-col gap-4 sm:gap-5 mb-6 sm:mb-8 shrink-0">
                   <div className="relative z-50">
                       <CustomSelect 
                           value={exportRoleFilter} 
@@ -730,14 +781,14 @@ export const Users = () => {
                       />
                   </div>
 
-                  <div className="flex justify-between items-center px-2 pt-2">
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Total a exportar</span>
-                      <span className="text-sm font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-full">{usersToExport.length} usuarios</span>
+                  <div className="flex justify-between items-center px-2 pt-1 sm:pt-2">
+                      <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest">Total a exportar</span>
+                      <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-full">{usersToExport.length} usuarios</span>
                   </div>
               </div>
 
               {/* Opciones de Formato */}
-              <div className="flex flex-col sm:flex-row gap-4 mb-8">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8 shrink-0">
                 {[
                   { key: "excel", icon: "table_view", label: "Excel (CSV)", color: "emerald" },
                   { key: "pdf", icon: "picture_as_pdf", label: "Archivo PDF", color: "rose" },
@@ -745,14 +796,15 @@ export const Users = () => {
                   const isSelected = selectedExportFormat === key;
                   return (
                     <button
+                      type="button"
                       key={key}
                       onClick={() => setSelectedExportFormat(key as "pdf" | "excel")}
-                      className={`flex-1 group relative overflow-hidden flex flex-col items-center justify-center gap-2 p-5 rounded-[24px] border-2 transition-all duration-300 ${isSelected ? `border-${color}-500 bg-${color}-50/50 dark:bg-${color}-500/10 shadow-md scale-[1.02]` : "border-slate-200 dark:border-slate-700/60 hover:border-slate-300 dark:hover:border-slate-600 active:scale-95 bg-slate-50 dark:bg-[#0f172a]"}`}
+                      className={`flex-1 group relative overflow-hidden flex flex-row sm:flex-col items-center justify-start sm:justify-center gap-3 sm:gap-2 p-4 sm:p-5 rounded-[20px] sm:rounded-[24px] border-2 transition-all duration-300 ${isSelected ? `border-${color}-500 bg-${color}-50/50 dark:bg-${color}-500/10 shadow-md scale-[1.02]` : "border-slate-200 dark:border-slate-700/60 hover:border-slate-300 dark:hover:border-slate-600 active:scale-95 bg-slate-50 dark:bg-[#0f172a]"}`}
                     >
-                      <span className={`material-symbols-rounded text-[32px] transition-colors ${isSelected ? `text-${color}-500` : "text-slate-400 group-hover:text-slate-500"}`}>{icon}</span>
+                      <span className={`material-symbols-rounded text-[28px] sm:text-[32px] transition-colors ${isSelected ? `text-${color}-500` : "text-slate-400 group-hover:text-slate-500"}`}>{icon}</span>
                       <span className={`font-bold text-sm ${isSelected ? `text-${color}-700 dark:text-${color}-400` : "text-slate-700 dark:text-slate-300"}`}>{label}</span>
                       {isSelected && (
-                        <span className={`material-symbols-rounded absolute top-3 right-3 text-${color}-500 text-xl`}>check_circle</span>
+                        <span className={`material-symbols-rounded absolute right-4 sm:top-3 sm:right-3 text-${color}-500 text-xl`}>check_circle</span>
                       )}
                     </button>
                   );
@@ -760,18 +812,20 @@ export const Users = () => {
               </div>
 
               {/* Botones */}
-              <div className="flex gap-4 mt-auto">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 mt-auto shrink-0">
                 <button
+                  type="button"
                   onClick={() => { setIsExportModalOpen(false); setSelectedExportFormat(null); }}
                   disabled={isExporting}
-                  className="flex-1 py-4 font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl transition-all active:scale-95 disabled:opacity-50"
+                  className="flex-1 py-3.5 sm:py-4 font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl transition-all active:scale-95 disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button
+                  type="button"
                   onClick={handleExportSubmit}
                   disabled={!selectedExportFormat || isExporting || usersToExport.length === 0}
-                  className="flex-[1.5] flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-40 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:shadow-none disabled:text-slate-500"
+                  className="flex-[1.5] flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-3.5 sm:py-4 rounded-2xl font-bold shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-40 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:shadow-none disabled:text-slate-500"
                 >
                   {isExporting
                     ? <span className="material-symbols-rounded animate-spin">progress_activity</span>
@@ -791,7 +845,7 @@ export const Users = () => {
             key="edit-overlay"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-0"
           >
             <motion.div
               key="edit-content"
@@ -799,22 +853,22 @@ export const Users = () => {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.93, opacity: 0, y: 12 }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="relative w-full max-w-md bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700/60 rounded-[32px] shadow-2xl overflow-hidden flex flex-col"
+              className="relative w-full max-w-md max-h-[90vh] overflow-y-auto comments-scroll bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700/60 rounded-[28px] sm:rounded-[32px] shadow-2xl flex flex-col"
             >
               {/* Header modal */}
-              <div className="p-8 border-b border-slate-100 dark:border-slate-700/50 flex flex-col gap-2">
+              <div className="p-6 sm:p-8 border-b border-slate-100 dark:border-slate-700/50 flex flex-col gap-2 shrink-0">
                 <div className="w-14 h-14 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-3xl flex items-center justify-center mb-2 border border-blue-100 dark:border-blue-500/20">
                   <span className="material-symbols-rounded text-3xl">lock_reset</span>
                 </div>
-                <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">Cambiar Contraseña</h2>
-                <p className="text-slate-500 dark:text-slate-400 text-sm">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Cambiar Contraseña</h2>
+                <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">
                   Asignando nueva credencial para{" "}
                   <span className="font-bold text-blue-500">@{userToEdit.sUser}</span>
                 </p>
               </div>
 
               {/* Body modal */}
-              <form onSubmit={handlePasswordUpdate} className="p-8 flex flex-col gap-6">
+              <form onSubmit={handlePasswordUpdate} className="p-6 sm:p-8 flex flex-col gap-5 sm:gap-6 shrink-0">
                 {editStatus?.type === "success" ? (
                   <div className="py-6 flex flex-col items-center justify-center text-center">
                     <motion.div
@@ -830,7 +884,7 @@ export const Users = () => {
                 ) : (
                   <>
                     <div className="group relative">
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 ml-1">
+                      <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 sm:mb-3 ml-1">
                         Nueva Contraseña
                       </label>
                       <div className="relative flex items-center">
@@ -839,7 +893,7 @@ export const Users = () => {
                           type={showEditPassword ? "text" : "password"}
                           value={newPassword}
                           onChange={(e) => { setNewPassword(e.target.value); if (editStatus?.type === "error") setEditStatus(null); }}
-                          className={`w-full pl-12 pr-14 py-4 bg-white dark:bg-[#0f172a]/50 border-2 ${editStatus?.type === "error" ? "border-rose-500 ring-2 ring-rose-500/20" : "border-slate-200 dark:border-slate-700/60"} rounded-2xl text-base text-slate-900 dark:text-white placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20`}
+                          className={`w-full pl-12 pr-14 py-3.5 sm:py-4 bg-white dark:bg-[#0f172a]/50 border-2 ${editStatus?.type === "error" ? "border-rose-500 ring-2 ring-rose-500/20" : "border-slate-200 dark:border-slate-700/60"} rounded-2xl text-sm sm:text-base text-slate-900 dark:text-white placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20`}
                           placeholder="Ingresa la nueva clave"
                         />
                         <button
@@ -851,25 +905,25 @@ export const Users = () => {
                         </button>
                       </div>
                       {editStatus?.type === "error" && (
-                        <p className="text-rose-500 text-sm mt-3 font-medium flex items-start gap-1">
+                        <p className="text-rose-500 text-[11px] sm:text-sm mt-3 font-medium flex items-start gap-1">
                           <span className="material-symbols-rounded text-base mt-0.5">error</span>
                           {editStatus.text}
                         </p>
                       )}
                     </div>
 
-                    <div className="flex gap-3">
+                    <div className="flex flex-col-reverse sm:flex-row gap-3 mt-2">
                       <button
                         type="button"
                         onClick={() => setIsEditModalOpen(false)}
-                        className="flex-1 py-4 font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl transition-all active:scale-95"
+                        className="flex-1 py-3.5 sm:py-4 font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl transition-all active:scale-95"
                       >
                         Cancelar
                       </button>
                       <button
                         type="submit"
                         disabled={isEditSubmitting || !newPassword}
-                        className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-50 disabled:shadow-none"
+                        className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-3.5 sm:py-4 rounded-2xl font-bold shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-50 disabled:shadow-none"
                       >
                         {isEditSubmitting
                           ? <span className="material-symbols-rounded animate-spin">progress_activity</span>

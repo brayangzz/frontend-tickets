@@ -556,6 +556,9 @@ export const CreateUser = () => {
   const avatarColor = getColorByLetter(formData.sName || formData.sLastName);
 
   useEffect(() => {
+    // Forzamos el scroll al principio de la página al montarse
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+
     if (showToast) {
       const t = setTimeout(() => setShowToast(false), 3500);
       return () => clearTimeout(t);
@@ -799,8 +802,9 @@ export const CreateUser = () => {
                         <label className={labelStyle}>Nombre(s) <span className="text-rose-500">*</span></label>
                         <ShakeField shake={!!shakeFields.sName}>
                           <div className="mt-2">
+                            {/* ELIMINADO autoFocus */}
                             <InputField name="sName" value={formData.sName} onChange={handleChange}
-                              icon="person" error={errors.sName} placeholder="Ej. Daniel" autoFocus />
+                              icon="person" error={errors.sName} placeholder="Ej. Daniel" />
                           </div>
                         </ShakeField>
                         {renderError('sName')}
@@ -928,7 +932,7 @@ export const CreateUser = () => {
                   className={`w-full sm:w-auto px-10 py-4 rounded-full font-bold text-[15px] flex items-center justify-center gap-2 transition-all ${
                     isSubmitting || isLoadingLists
                       ? "bg-slate-100 dark:bg-[#1e293b] text-slate-400 dark:text-slate-500 cursor-not-allowed border border-transparent dark:border-slate-800 shadow-none"
-                      : "bg-blue-600 hover:bg-blue-500 text-white shadow-[0_8px_20px_rgba(37,99,235,0.2)] dark:shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_10px_25px_rgba(37,99,235,0.3)] dark:hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] border border-blue-500/50"
+                      : "bg-blue-600 hover:bg-blue-500 text-white shadow-[0_8px_20px_rgba(37,99,235,0.2)] dark:shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_10px_25px_rgba(37,99,235,0.3)] dark:shadow-[0_0_30px_rgba(59,130,246,0.5)] border border-blue-500/50"
                   }`}>
                   {isSubmitting
                     ? <><span className="material-symbols-rounded animate-spin text-[22px]">progress_activity</span><span>Creando Perfil...</span></>

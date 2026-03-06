@@ -9,7 +9,7 @@ interface ApiUser {
   iIdUser?: number; ildUser?: number;
   employeeName: string; roleName?: string;
   iIdRol?: number; ildRol?: number;
-  departmentName?: string; // Aseguramos que la interfaz contenga el departamento
+  departmentName?: string;
 }
 
 interface FilePreview { 
@@ -29,8 +29,9 @@ const getInitials = (name: string) => {
 };
 
 const getAvatarGradient = (id: number) => {
+    const validId = Number(id) || 0;
     const gradients = ['from-blue-500 to-indigo-600', 'from-emerald-400 to-teal-600', 'from-orange-400 to-rose-500', 'from-purple-500 to-fuchsia-600', 'from-cyan-400 to-blue-600'];
-    return gradients[id % gradients.length];
+    return gradients[validId % gradients.length];
 };
 
 // ─── Utilidad para calcular posición del portal y actualizar al hacer scroll ───
@@ -105,7 +106,7 @@ const CustomSelect = ({ value, onChange, options, placeholder, icon, hasError = 
         <span className={`material-symbols-rounded text-[20px] shrink-0 transition-all duration-300 ${isOpen ? "rotate-180 text-blue-500" : "text-slate-400 dark:text-slate-500"}`}>expand_more</span>
       </div>
 
-      {isOpen && createPortal(
+      {isOpen && typeof document !== "undefined" && createPortal(
         <div ref={dropdownRef} style={{ position: "absolute", top: pos.top, left: pos.left, width: Math.max(pos.width, 260), zIndex: 9999 }}>
           <motion.div initial={{ opacity: 0, y: -8, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.97 }} transition={{ duration: 0.16 }}
@@ -180,19 +181,24 @@ const CustomDatePicker = ({ value, onChange, placeholder = "Selecciona una fecha
     };
   }, [isOpen, updatePos]);
 
-  const daysInMonth = new Date(view.year, view.month + 1, 0).getDate();
-  const firstDay = (() => { const d = new Date(view.year, view.month, 1).getDay(); return d === 0 ? 6 : d - 1; })();
+  // Protección por si view.year o month se corrompen
+  const safeYear = view.year || today.getFullYear();
+  const safeMonth = view.month ?? today.getMonth();
+
+  const daysInMonth = new Date(safeYear, safeMonth + 1, 0).getDate();
+  const firstDay = (() => { const d = new Date(safeYear, safeMonth, 1).getDay(); return d === 0 ? 6 : d - 1; })();
+  
   const prevMonth = () => setView(v => v.month === 0 ? { month: 11, year: v.year - 1 } : { month: v.month - 1, year: v.year });
   const nextMonth = () => setView(v => v.month === 11 ? { month: 0, year: v.year + 1 } : { month: v.month + 1, year: v.year });
   
   const selectDay = (day: number) => {
-    const d = new Date(view.year, view.month, day);
+    const d = new Date(safeYear, safeMonth, day);
     onChange(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`);
     setIsOpen(false);
   };
   
-  const isSelected = (day: number) => selectedDate?.getDate() === day && selectedDate?.getMonth() === view.month && selectedDate?.getFullYear() === view.year;
-  const isToday = (day: number) => today.getDate() === day && today.getMonth() === view.month && today.getFullYear() === view.year;
+  const isSelected = (day: number) => selectedDate?.getDate() === day && selectedDate?.getMonth() === safeMonth && selectedDate?.getFullYear() === safeYear;
+  const isToday = (day: number) => today.getDate() === day && today.getMonth() === safeMonth && today.getFullYear() === safeYear;
   const formatDisplay = (v: string) => new Date(v + "T12:00:00").toLocaleDateString("es-MX", { day: "2-digit", month: "long", year: "numeric" });
 
   return (
@@ -216,7 +222,7 @@ const CustomDatePicker = ({ value, onChange, placeholder = "Selecciona una fecha
         <span className={`material-symbols-rounded text-[20px] shrink-0 transition-all duration-300 ${isOpen ? "rotate-180 text-blue-500" : "text-slate-400 dark:text-slate-500"}`}>expand_more</span>
       </div>
 
-      {isOpen && createPortal(
+      {isOpen && typeof document !== "undefined" && createPortal(
         <div ref={pickerRef} style={{ position: "absolute", top: pos.top, left: pos.left, width: Math.max(pos.width, 280), zIndex: 9999 }}>
           <motion.div initial={{ opacity: 0, y: -8, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.97 }} transition={{ duration: 0.16 }}
@@ -228,7 +234,7 @@ const CustomDatePicker = ({ value, onChange, placeholder = "Selecciona una fecha
                 <span className="material-symbols-rounded text-[18px]">chevron_left</span>
               </motion.button>
               <span className="text-[15px] font-extrabold text-slate-800 dark:text-white capitalize tracking-wide">
-                {MONTHS_ES[view.month]} {view.year}
+                {MONTHS_ES[safeMonth]} {safeYear}
               </span>
               <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={nextMonth}
                 className="w-8 h-8 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#0f172a] transition-all">
@@ -243,8 +249,8 @@ const CustomDatePicker = ({ value, onChange, placeholder = "Selecciona una fecha
             </div>
             {/* Días */}
             <div className="grid grid-cols-7 gap-1">
-              {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
-              {Array.from({ length: daysInMonth }).map((_, i) => {
+              {Array.from({ length: Math.max(0, firstDay) }).map((_, i) => <div key={`e${i}`} />)}
+              {Array.from({ length: Math.max(0, daysInMonth) }).map((_, i) => {
                 const day = i + 1;
                 const sel = isSelected(day);
                 const tod = isToday(day);
@@ -307,6 +313,9 @@ export const CreateTask = () => {
   const isValid = title.trim().length > 0 && description.trim().length > 0 && startDate.length > 0 && (taskType === "personal" || selectedUserId !== "");
 
   useEffect(() => {
+    // MAGIA AQUI: Forzar el scroll hacia arriba apenas entra a la pantalla
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+
     const fetchSubordinatesAndUserInfo = async () => {
       setIsLoadingUsers(true);
       try {
@@ -319,8 +328,12 @@ export const CreateTask = () => {
         ]);
 
         if (usersRes.ok && rolesRes.ok) {
-          const usersData: ApiUser[] = await usersRes.json();
-          const rolesData = await rolesRes.json();
+          const usersDataRaw = await usersRes.json();
+          const rolesDataRaw = await rolesRes.json();
+          
+          // Blindaje contra respuestas raras de la API
+          const usersData: ApiUser[] = Array.isArray(usersDataRaw) ? usersDataRaw : (usersDataRaw?.data || usersDataRaw?.result || []);
+          const rolesData = Array.isArray(rolesDataRaw) ? rolesDataRaw : (rolesDataRaw?.data || rolesDataRaw?.result || []);
           
           const userStr = localStorage.getItem("user");
           let myRoleId = 0;
@@ -419,23 +432,23 @@ export const CreateTask = () => {
   if (showSuccess) return (
     <div className="flex flex-col items-center justify-center h-[70vh] font-display">
       <div className="relative mb-8">
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 260, damping: 20 }}
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 260, damping: 20 } as any}
           className="w-28 h-28 bg-emerald-500 rounded-full flex items-center justify-center shadow-2xl shadow-emerald-500/30 relative z-10">
-          <motion.span initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.2 }} className="material-symbols-rounded text-7xl text-white">check</motion.span>
+          <motion.span initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.2 } as any} className="material-symbols-rounded text-7xl text-white">check</motion.span>
         </motion.div>
-        <motion.div initial={{ scale: 0.8, opacity: 0.5 }} animate={{ scale: 1.6, opacity: 0 }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }} className="absolute inset-0 bg-emerald-500/20 rounded-full z-0" />
+        <motion.div initial={{ scale: 0.8, opacity: 0.5 }} animate={{ scale: 1.6, opacity: 0 }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" } as any} className="absolute inset-0 bg-emerald-500/20 rounded-full z-0" />
       </div>
-      <motion.h2 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="text-4xl font-extrabold text-slate-900 dark:text-white mb-2">¡Tarea Creado!</motion.h2>
-      <motion.p initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} className="text-slate-500 dark:text-slate-400">Se ha agendado correctamente.</motion.p>
+      <motion.h2 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 } as any} className="text-4xl font-extrabold text-slate-900 dark:text-white mb-2">¡Tarea Creada!</motion.h2>
+      <motion.p initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 } as any} className="text-slate-500 dark:text-slate-400">Se ha agendado correctamente.</motion.p>
     </div>
   );
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut" }}
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut" } as any}
       className="flex flex-col gap-8 w-full max-w-[860px] mx-auto pb-12 font-display"
     >
       {/* HEADER */}
-      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut" }} className="flex items-center gap-5">
+      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut" } as any} className="flex items-center gap-5">
         <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => navigate(-1)}
           className="w-12 h-12 rounded-full bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors shadow-md">
           <span className="material-symbols-rounded text-[22px]">arrow_back</span>
@@ -456,7 +469,7 @@ export const CreateTask = () => {
       {/* ERROR */}
       <AnimatePresence>
         {errorMessage && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 } as any} className="overflow-hidden">
             <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-400 p-4 rounded-2xl flex items-center gap-3 shadow-sm">
               <span className="material-symbols-rounded shrink-0">error</span>
               <p className="font-medium text-sm">{errorMessage}</p>
@@ -467,7 +480,7 @@ export const CreateTask = () => {
       </AnimatePresence>
 
       {/* CARD PRINCIPAL */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" } as any}>
         <Card className="overflow-hidden shadow-2xl bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-[28px] p-0">
 
           <div className="p-8 md:p-10 flex flex-col gap-8">
@@ -489,7 +502,7 @@ export const CreateTask = () => {
                   <div className="flex bg-slate-100 dark:bg-[#0f172a] p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 w-full md:w-80 relative shadow-inner">
                     <motion.div layout className="absolute top-1.5 bottom-1.5 rounded-xl bg-white dark:bg-slate-700/80 shadow-sm border border-slate-200 dark:border-slate-600"
                       initial={false} animate={{ left: taskType === "personal" ? "6px" : "50%", width: "calc(50% - 9px)" }}
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }} />
+                      transition={{ type: "spring", stiffness: 300, damping: 30 } as any} />
                     
                     {[{ key: "personal", icon: "person", label: "Personal" }, { key: "assign", icon: "group", label: "Asignar" }].map(({ key, icon, label }) => {
                       const isDisabled = key === "assign" && !isLoadingUsers && users.length === 0;
@@ -518,7 +531,7 @@ export const CreateTask = () => {
                         initial={{ height: 0, opacity: 0 }} 
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }} 
-                        transition={{ duration: 0.3, ease: "easeInOut" }} 
+                        transition={{ duration: 0.3, ease: "easeInOut" } as any} 
                         style={{ overflow: "hidden" }} 
                     >
                       <div className="pt-8 flex flex-col gap-2.5">
@@ -539,13 +552,13 @@ export const CreateTask = () => {
                 </AnimatePresence>
             </div>
 
-            {/* TÍTULO */}
+            {/* TÍTULO (SIN autoFocus) */}
             <div className="flex flex-col gap-2.5 group">
               <label className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-300 group-focus-within:text-blue-500 transition-colors ml-1">
                 Título <span className="text-rose-500">*</span>
               </label>
               <input type="text" value={title} onChange={(e) => { setTitle(e.target.value); setErrorMessage(null); }}
-                placeholder="Ej: Revisión de inventario, Actualizar diseño..." className={inputPremiumClass} autoFocus />
+                placeholder="Ej: Revisión de inventario, Actualizar diseño..." className={inputPremiumClass} />
             </div>
 
             {/* DESCRIPCIÓN */}
@@ -569,7 +582,6 @@ export const CreateTask = () => {
                 <label className="text-[11px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-300 ml-1 flex items-center gap-1.5">
                   <span className="material-symbols-rounded text-[16px] text-slate-400">lock</span> Departamento
                 </label>
-                {/* CAMBIO AQUÍ: Ahora muestra el departamento real extraído del usuario y sigue estando bloqueado visualmente */}
                 <div className="w-full flex items-center gap-3 px-5 py-3.5 bg-slate-100/50 dark:bg-[#131c2f]/40 border border-slate-200 dark:border-slate-800 rounded-2xl cursor-default shadow-none transition-all">
                   <span className="material-symbols-rounded text-[20px] text-blue-500/70 dark:text-blue-400/70">domain</span>
                   <span className="text-[15px] font-bold text-slate-700 dark:text-slate-200 truncate flex-1">
@@ -631,7 +643,7 @@ export const CreateTask = () => {
               {files.length > 0 && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="flex flex-wrap gap-3 mt-2">
                   {files.map((item) => (
-                    <motion.div key={item.id} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                    <motion.div key={item.id} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ type: "spring", stiffness: 400, damping: 25 } as any}
                       className="flex items-center gap-3 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 pl-2 pr-4 py-2 rounded-2xl text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-sm group">
                       {item.previewUrl ? (
                         <div className="w-10 h-10 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-600 shrink-0 bg-slate-100 dark:bg-slate-900">

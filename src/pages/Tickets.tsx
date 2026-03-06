@@ -241,17 +241,18 @@ export const Tickets = () => {
 
         {/* Filtros + Reset (Responsivos) */}
         <div className="flex gap-2 w-full lg:w-auto shrink-0">
-          {/* Filtro Estatus */}
-          <div className="relative flex-1 lg:flex-none" ref={statusRef}>
+          {/* Filtro Estatus - SE AÑADIÓ min-w-0 */}
+          <div className="relative flex-1 min-w-0 lg:flex-none" ref={statusRef}>
             <motion.button
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
               onClick={() => setIsStatusOpen(!isStatusOpen)}
-              className={`flex items-center justify-between gap-2 h-12 w-full lg:w-auto px-4 sm:px-6 rounded-full border bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm ${isStatusOpen ? "border-blue-500 ring-2 ring-blue-500/20" : "border-slate-200 dark:border-slate-700"}`}
+              // Padding y gap reducidos en móvil para evitar empujar otros elementos
+              className={`flex items-center justify-between gap-1.5 sm:gap-3 h-12 w-full lg:w-auto px-3 sm:px-5 rounded-full border bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm ${isStatusOpen ? "border-blue-500 ring-2 ring-blue-500/20" : "border-slate-200 dark:border-slate-700"}`}
             >
               <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200 truncate">
                 {filterStatus === "all" ? "Estatus" : statuses.find((s) => s.iIdStatus === Number(filterStatus))?.sStatus}
               </span>
-              <span className="material-symbols-rounded text-slate-400 shrink-0" style={{ transform: isStatusOpen ? "rotate(180deg)" : "none" }}>expand_more</span>
+              <span className="material-symbols-rounded text-slate-400 shrink-0 text-[18px] sm:text-[24px]" style={{ transform: isStatusOpen ? "rotate(180deg)" : "none" }}>expand_more</span>
             </motion.button>
             <AnimatePresence>
               {isStatusOpen && (
@@ -262,7 +263,6 @@ export const Tickets = () => {
                   <div className="flex flex-col gap-1 max-h-60 overflow-y-auto comments-scroll">
                     <button onClick={() => { setFilterStatus("all"); setIsStatusOpen(false); }} className={`px-4 py-2.5 rounded-xl text-left text-sm font-bold transition-all ${filterStatus === "all" ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>Todos los estatus</button>
                     
-                    {/* AQUI SE AGREGA EL FILTRO PARA OCULTAR "COMPLETADO" (ID 4) */}
                     {statuses
                       .filter((s) => s.iIdStatus !== 4) 
                       .map((s) => (
@@ -275,17 +275,18 @@ export const Tickets = () => {
             </AnimatePresence>
           </div>
 
-          {/* Filtro Sucursal */}
-          <div className="relative flex-1 lg:flex-none" ref={branchRef}>
+          {/* Filtro Sucursal - SE AÑADIÓ min-w-0 */}
+          <div className="relative flex-1 min-w-0 lg:flex-none" ref={branchRef}>
             <motion.button
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
               onClick={() => setIsBranchOpen(!isBranchOpen)}
-              className={`flex items-center justify-between gap-2 h-12 w-full lg:w-auto px-4 sm:px-6 rounded-full border bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm ${isBranchOpen ? "border-blue-500 ring-2 ring-blue-500/20" : "border-slate-200 dark:border-slate-700"}`}
+              // Padding y gap reducidos en móvil para evitar empujar otros elementos
+              className={`flex items-center justify-between gap-1.5 sm:gap-3 h-12 w-full lg:w-auto px-3 sm:px-5 rounded-full border bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm ${isBranchOpen ? "border-blue-500 ring-2 ring-blue-500/20" : "border-slate-200 dark:border-slate-700"}`}
             >
               <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200 truncate">
                 {filterBranch === "all" ? "Sucursal" : branches.find((b) => b.iIdBranch === Number(filterBranch))?.sBranch}
               </span>
-              <span className="material-symbols-rounded text-slate-400 shrink-0" style={{ transform: isBranchOpen ? "rotate(180deg)" : "none" }}>expand_more</span>
+              <span className="material-symbols-rounded text-slate-400 shrink-0 text-[18px] sm:text-[24px]" style={{ transform: isBranchOpen ? "rotate(180deg)" : "none" }}>expand_more</span>
             </motion.button>
             <AnimatePresence>
               {isBranchOpen && (
@@ -365,7 +366,6 @@ export const Tickets = () => {
                           layout
                           key={t.iIdTask}
                           onClick={() => navigate(`/tickets/${t.iIdTask}`)}
-                          // Solo opacity en filas de tabla: evita desplazamiento lateral
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
@@ -490,7 +490,7 @@ export const Tickets = () => {
         </Card>
       </motion.div>
 
-      {/* MODAL EXPORTAR */}
+      {/* MODAL EXPORTAR CON MARGEN RESPONSIVO (P-4) */}
       <AnimatePresence>
         {isExportModalOpen && (
           <motion.div
@@ -499,7 +499,7 @@ export const Tickets = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-6"
           >
             <motion.div
               key="modal-content"
@@ -507,11 +507,12 @@ export const Tickets = () => {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.93, opacity: 0, y: 12 }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="w-full max-w-lg flex items-center justify-center"
             >
               <ExportTicketModal
                 isOpen={true}
                 onClose={() => setIsExportModalOpen(false)}
-                data={filteredData}
+                data={filteredData as any}
               />
             </motion.div>
           </motion.div>

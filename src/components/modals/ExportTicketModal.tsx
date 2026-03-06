@@ -63,7 +63,7 @@ const CustomDropdown = ({ value, onChange, options, placeholder }: { value: stri
                     updatePos(); 
                     setIsOpen(!isOpen); 
                 }}
-                className={`flex items-center justify-between gap-1.5 sm:gap-2 h-11 w-full px-4 sm:px-4 bg-slate-50 dark:bg-slate-900/50 border hover:border-slate-300 dark:hover:border-slate-600 rounded-xl text-[13px] font-bold transition-all shrink-0 ${isOpen ? "border-blue-500 ring-2 ring-blue-500/20 text-blue-600 dark:text-blue-400 bg-white dark:bg-[#131c2f]" : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"}`}
+                className={`flex items-center justify-between gap-1.5 sm:gap-2 h-11 w-full px-4 bg-slate-50 dark:bg-slate-900/50 border hover:border-slate-300 dark:hover:border-slate-600 rounded-xl text-[13px] font-bold transition-all shrink-0 ${isOpen ? "border-blue-500 ring-2 ring-blue-500/20 text-blue-600 dark:text-blue-400 bg-white dark:bg-[#131c2f]" : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"}`}
             >
                 <span className="truncate">{selectedLabel}</span>
                 <motion.span animate={{ rotate: isOpen ? 180 : 0 }} className="material-symbols-rounded text-[18px] sm:text-[20px] text-slate-400 shrink-0">expand_more</motion.span>
@@ -209,16 +209,16 @@ export const ExportTicketModal = ({ isOpen, onClose, data }: Props) => {
 
   // El wrapper AnimatePresence + motion lo maneja el padre (Tickets.tsx)
   return (
-    <div className="relative w-full max-w-lg bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700/60 rounded-[32px] shadow-2xl overflow-hidden flex flex-col">
+    <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto comments-scroll bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700/60 rounded-[28px] sm:rounded-[32px] shadow-2xl flex flex-col">
       
       {/* HEADER */}
-      <div className="p-8 border-b border-slate-100 dark:border-slate-700/50 flex items-start justify-between">
-        <div className="flex flex-col gap-2">
+      <div className="p-6 sm:p-8 border-b border-slate-100 dark:border-slate-700/50 flex items-start justify-between shrink-0">
+        <div className="flex flex-col gap-1.5 sm:gap-2">
           <div className="w-14 h-14 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-3xl flex items-center justify-center border border-blue-100 dark:border-blue-500/20">
             <span className="material-symbols-rounded text-3xl">ios_share</span>
           </div>
-          <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white mt-2">Exportar Reporte</h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-1 sm:mt-2">Exportar Reporte</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">
             Elige los filtros y el formato de descarga.
           </p>
         </div>
@@ -234,32 +234,32 @@ export const ExportTicketModal = ({ isOpen, onClose, data }: Props) => {
       </div>
 
       {/* BODY */}
-      <div className="p-8 flex flex-col gap-8">
+      <div className="p-6 sm:p-8 flex flex-col gap-6 sm:gap-8 shrink-0">
 
         {/* FILTROS: Mes / Año / Estatus */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5 sm:gap-2">
               <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 ml-1">Mes</label>
               <CustomDropdown value={selectedMonth} onChange={(v) => setSelectedMonth(Number(v))} options={monthOptions} placeholder="Mes" />
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5 sm:gap-2">
               <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 ml-1">Año</label>
               <CustomDropdown value={selectedYear} onChange={(v) => setSelectedYear(Number(v))} options={yearOptions} placeholder="Año" />
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5 sm:gap-2">
               <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 ml-1">Estatus</label>
               <CustomDropdown value={selectedStatus} onChange={(v) => setSelectedStatus(v)} options={statusOptions} placeholder="Todos" />
             </div>
         </div>
 
-        {/* FORMATO */}
-        <div className="flex flex-col gap-3">
+        {/* FORMATO (RESPONSIVO: flex-col en móvil, flex-row en sm) */}
+        <div className="flex flex-col gap-2 sm:gap-3">
           <label className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 ml-1">
             Formato de archivo
           </label>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             {[
               { key: "excel", icon: "table_view", label: "Excel (.xlsx)", color: "emerald" },
               { key: "pdf", icon: "picture_as_pdf", label: "PDF Document", color: "rose" },
@@ -267,11 +267,12 @@ export const ExportTicketModal = ({ isOpen, onClose, data }: Props) => {
               const isSelected = format === key;
               return (
                 <button
+                  type="button"
                   key={key}
                   onClick={() => setFormat(key as "excel" | "pdf")}
-                  className={`relative overflow-hidden flex items-center gap-3 p-4 rounded-2xl border-2 transition-all duration-200 text-left ${
+                  className={`flex-1 relative overflow-hidden flex flex-row sm:flex-col items-center justify-start sm:justify-center gap-3 sm:gap-2 p-4 sm:p-5 rounded-[20px] sm:rounded-[24px] border-2 transition-all duration-200 text-left ${
                     isSelected
-                      ? `border-${color}-500 bg-${color}-50/50 dark:bg-${color}-500/10 scale-[1.02] shadow-md`
+                      ? `border-${color}-500 bg-${color}-50/50 dark:bg-${color}-500/10 shadow-md scale-[1.02]`
                       : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 active:scale-95"
                   }`}
                 >
@@ -288,7 +289,7 @@ export const ExportTicketModal = ({ isOpen, onClose, data }: Props) => {
                     {label}
                   </span>
                   {isSelected && (
-                    <div className={`absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-${color}-500 animate-pulse`} />
+                    <div className={`absolute right-4 sm:top-2.5 sm:right-2.5 w-2 h-2 rounded-full bg-${color}-500 animate-pulse`} />
                   )}
                 </button>
               );
@@ -297,7 +298,7 @@ export const ExportTicketModal = ({ isOpen, onClose, data }: Props) => {
         </div>
 
         {/* RESUMEN */}
-        <div className={`flex items-center gap-3 p-4 rounded-2xl border transition-colors ${
+        <div className={`flex items-center gap-3 p-3 sm:p-4 rounded-2xl border transition-colors ${
           filteredCount > 0
             ? "bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/20 text-blue-700 dark:text-blue-300"
             : "bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20 text-amber-700 dark:text-amber-300"
@@ -305,29 +306,31 @@ export const ExportTicketModal = ({ isOpen, onClose, data }: Props) => {
           <span className="material-symbols-rounded text-xl shrink-0">
             {filteredCount > 0 ? "info" : "warning"}
           </span>
-          <p className="text-sm font-medium">
+          <p className="text-xs sm:text-sm font-medium">
             {filteredCount > 0 ? (
-              <>Se exportarán <b className="font-extrabold text-slate-900 dark:text-white">{filteredCount} tickets</b> con los filtros actuales.</>
+              <>Se exportarán <b className="font-extrabold text-slate-900 dark:text-white">{filteredCount} tickets</b>.</>
             ) : (
-              "No hay tickets que coincidan con estos filtros."
+              "No hay tickets con estos filtros."
             )}
           </p>
         </div>
       </div>
 
-      {/* FOOTER */}
-      <div className="px-8 pb-8 flex gap-3">
+      {/* FOOTER (RESPONSIVO: Apilados en móvil) */}
+      <div className="px-6 sm:px-8 pb-6 sm:pb-8 flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 shrink-0">
         <button
+          type="button"
           onClick={onClose}
           disabled={isExporting}
-          className="flex-1 py-4 font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl transition-all active:scale-95 disabled:opacity-50"
+          className="flex-1 py-3.5 sm:py-4 font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl transition-all active:scale-95 disabled:opacity-50"
         >
           Cancelar
         </button>
         <button
+          type="button"
           onClick={handleExport}
           disabled={isExporting || filteredCount === 0}
-          className="flex-[1.5] flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-40 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:shadow-none disabled:text-slate-500"
+          className="flex-[1.5] flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-3.5 sm:py-4 rounded-2xl font-bold shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-40 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:shadow-none disabled:text-slate-500"
         >
           {isExporting ? (
             <span className="material-symbols-rounded animate-spin">progress_activity</span>

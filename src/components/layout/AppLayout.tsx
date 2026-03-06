@@ -23,7 +23,7 @@ export const AppLayout = () => {
       <main className="flex-1 flex flex-col w-full min-w-0">
          
          {/* HEADER MÓVIL (Solo visible en celular para abrir menú) */}
-         <div className="lg:hidden p-4 flex items-center justify-between bg-white dark:bg-[#1e293b] border-b border-slate-200 dark:border-slate-800 sticky top-0 z-20">
+         <div className="lg:hidden p-4 flex items-center justify-between bg-white dark:bg-[#0F172A] border-b border-slate-200 dark:border-slate-800 sticky top-0 z-20">
             <div className="flex items-center gap-3">
 <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm">
   <img 
