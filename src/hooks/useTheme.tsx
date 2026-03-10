@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 export function useTheme() {
   // 1. Leemos la preferencia guardada o usamos "light" por defecto
   const [theme, setTheme] = useState(
-    localStorage.getItem("theme") || "light"
+    localStorage.getItem("theme") || "dark"
   );
 
   // 2. Este efecto se ejecuta cada vez que 'theme' cambia
