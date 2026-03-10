@@ -509,6 +509,13 @@ export const TicketDetail = () => {
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .animate-slide-up { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
+        @keyframes floatEffect {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float { animation: floatEffect 3s ease-in-out infinite; will-change: transform; backface-visibility: hidden; }
+
         /* Scrollbar personalizado */
         .comments-scroll::-webkit-scrollbar { width: 6px; }
         .comments-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -674,10 +681,10 @@ export const TicketDetail = () => {
           
           <div className="xl:col-span-2 flex flex-col gap-6">
               
-              <Card className={`p-0 bg-white dark:bg-[#1e293b] border ${isEditingDescription ? 'border-blue-500/50 ring-1 ring-blue-500/20' : 'border-slate-200 dark:border-slate-800'} shadow-sm rounded-[24px] overflow-hidden transition-all duration-300`}>
-                  <div className="p-6 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20 flex items-center justify-between">
+              <Card className={`p-0 bg-white dark:bg-[#1e293b]/90 backdrop-blur-xl border ${isEditingDescription ? 'border-blue-500/50 ring-1 ring-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.15)]' : 'border-slate-200 dark:border-slate-700/60 hover:border-slate-600/60'} shadow-xl rounded-[24px] overflow-hidden transition-all duration-500`}>
+                  <div className="p-6 border-b border-slate-100 dark:border-slate-700/50 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800/40 dark:to-slate-900/40 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                          <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-400">
+                          <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-400 shadow-inner">
                               <span className="material-symbols-rounded text-xl">subject</span>
                           </div>
                           <h3 className="font-bold text-xs text-slate-400 uppercase tracking-widest">Descripción del Problema</h3>
@@ -706,8 +713,8 @@ export const TicketDetail = () => {
                           {files.map((file) => {
                               const isImage = file.sFilePath.match(/\.(jpeg|jpg|gif|png|webp|bmp)$/i);
                               return (
-                                  <motion.div key={file.iIdTaskFile || Math.random()} whileHover={{ scale: 1.02 }} onClick={() => isImage ? setPreviewImage(file.sFilePath) : window.open(file.sFilePath, '_blank')} className="group flex items-center gap-4 p-4 rounded-[20px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1e293b] hover:shadow-lg transition-all cursor-pointer overflow-hidden">
-                                      <div className="w-14 h-14 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shrink-0 flex items-center justify-center overflow-hidden relative">
+                                  <motion.div key={file.iIdTaskFile || Math.random()} whileHover={{ scale: 1.02, y: -2 }} onClick={() => isImage ? setPreviewImage(file.sFilePath) : window.open(file.sFilePath, '_blank')} className="group flex items-center gap-4 p-4 rounded-[20px] border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-[#1e293b]/80 backdrop-blur-sm hover:shadow-xl hover:border-blue-500/30 transition-all duration-300 cursor-pointer overflow-hidden">
+                                      <div className="w-14 h-14 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 shrink-0 flex items-center justify-center overflow-hidden relative shadow-inner">
                                           {isImage ? <img src={file.sFilePath} alt="evidencia" className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" /> : <span className="material-symbols-rounded text-2xl text-slate-400">description</span>}
                                       </div>
                                       <div className="flex flex-col min-w-0">
@@ -719,18 +726,18 @@ export const TicketDetail = () => {
                           })}
                       </div>
                   ) : (
-                      <div className="flex flex-col items-center justify-center py-10 text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-900/30">
-                          <span className="material-symbols-rounded text-3xl opacity-30 mb-2">image_not_supported</span>
-                          <span className="text-xs font-medium">Sin archivos adjuntos</span>
+                      <div className="group flex flex-col items-center justify-center py-12 text-slate-400 border border-dashed border-slate-300 dark:border-slate-700/80 rounded-2xl bg-slate-50/30 dark:bg-slate-800/20 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-all duration-500">
+                          <span className="material-symbols-rounded text-4xl opacity-40 mb-3 group-hover:text-blue-500 group-hover:opacity-80 transition-colors duration-300 animate-float">cloud_off</span>
+                          <span className="text-sm font-bold tracking-wide group-hover:text-slate-300 transition-colors duration-300">Sin archivos adjuntos</span>
                       </div>
                   )}
               </div>
 
               {/* COMENTARIOS */}
-              <Card className="mt-2 p-0 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 shadow-sm rounded-[24px] overflow-hidden flex flex-col">
-                  <div className="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20 flex items-center justify-between">
+              <Card className="mt-2 p-0 bg-white dark:bg-[#1e293b]/90 backdrop-blur-xl border border-slate-200 dark:border-slate-700/60 shadow-xl rounded-[24px] overflow-hidden flex flex-col transition-all duration-500 hover:border-slate-600/60">
+                  <div className="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-700/50 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800/40 dark:to-slate-900/40 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg">
+                          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg shadow-inner">
                               <span className="material-symbols-rounded text-xl">forum</span>
                           </div>
                           <h3 className="font-bold text-[10px] sm:text-xs text-slate-800 dark:text-slate-200 uppercase tracking-widest truncate">Actividad & Comentarios</h3>
@@ -759,7 +766,7 @@ export const TicketDetail = () => {
                                                     <span className="text-[8px] sm:text-[9px] font-medium text-slate-400 uppercase tracking-wide whitespace-nowrap">{msg.time}</span>
                                                 </div>
                                                 
-                                                <div className={`flex flex-col gap-2 px-4 sm:px-5 py-2.5 sm:py-3 shadow-sm transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md ${msg.isMine ? 'bg-blue-600 text-white border border-blue-500 rounded-[20px] rounded-tr-[4px]' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-[20px] rounded-tl-[4px]'}`}>
+                                                <div className={`flex flex-col gap-2 px-4 sm:px-5 py-2.5 sm:py-3 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg ${msg.isMine ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white border border-blue-500/50 rounded-[20px] rounded-tr-[4px] shadow-md shadow-blue-500/20' : 'bg-white dark:bg-slate-800/90 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700/80 rounded-[20px] rounded-tl-[4px] shadow-md shadow-slate-900/10 backdrop-blur-md'}`}>
                                                     
                                                     {/* IMÁGENES DEL COMENTARIO */}
                                                     {msg.images && msg.images.length > 0 && (
@@ -808,7 +815,7 @@ export const TicketDetail = () => {
                         )}
                       </AnimatePresence>
 
-                      <div className="relative shadow-sm rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 group focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all flex items-end">
+                      <div className="relative shadow-md rounded-2xl bg-white dark:bg-slate-900/60 backdrop-blur-md border border-slate-300 dark:border-slate-700/80 group focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/20 transition-all duration-300 flex items-end">
                           
                           {/* INPUT OCULTO DE ARCHIVOS */}
                           <input type="file" multiple accept="image/*" ref={fileInputRef} onChange={handleImageChange} className="hidden" />
@@ -830,8 +837,8 @@ export const TicketDetail = () => {
           </div>
 
           <div className="flex flex-col h-full">
-              <Card className="bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 p-6 rounded-[24px] shadow-sm h-fit sticky top-6">
-                  <div className="flex items-center gap-3 mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
+              <Card className="bg-white dark:bg-[#1e293b]/90 backdrop-blur-xl border border-slate-200 dark:border-slate-700/60 hover:border-slate-600/60 p-6 rounded-[24px] shadow-xl transition-all duration-500 h-fit sticky top-6">
+                  <div className="flex items-center gap-3 mb-6 border-b border-slate-100 dark:border-slate-700/50 pb-4">
                       <span className="material-symbols-rounded text-slate-400">info</span>
                       <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Información General</h3>
                   </div>
@@ -894,13 +901,13 @@ export const TicketDetail = () => {
 };
 
 const DetailRow = ({ icon, label, value, color, bg }: any) => (
-    <div className="flex items-center gap-4 group">
-        <div className={`w-10 h-10 rounded-xl ${bg} ${color} flex items-center justify-center shrink-0 transition-transform group-hover:scale-110`}>
-            <span className="material-symbols-rounded text-xl">{icon}</span>
+    <div className="flex items-center gap-4 group p-2 -mx-2 rounded-[16px] hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-default">
+        <div className={`w-10 h-10 rounded-xl ${bg} ${color} flex items-center justify-center shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:shadow-md`}>
+            <span className="material-symbols-rounded text-xl opacity-90 group-hover:opacity-100 drop-shadow-sm">{icon}</span>
         </div>
         <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-0.5">{label}</p>
-            <p className="text-sm font-bold text-txt-main">{value}</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-0.5 group-hover:text-slate-500 dark:group-hover:text-slate-300 transition-colors">{label}</p>
+            <p className="text-sm font-bold text-txt-main group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors">{value}</p>
         </div>
     </div>
 );

@@ -192,6 +192,12 @@ export const Users = () => {
   const [isEditSubmitting, setIsEditSubmitting] = useState(false);
   const [editStatus, setEditStatus] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  // Modal: Eliminar usuario
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<ApiUser | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteStatus, setDeleteStatus] = useState<"idle" | "success" | "error">("idle");
+
   // Modal: Exportar
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [selectedExportFormat, setSelectedExportFormat] = useState<"pdf" | "excel" | null>(null);
@@ -388,6 +394,34 @@ export const Users = () => {
 
   const openEditModal = (user: ApiUser) => {
     setUserToEdit(user); setNewPassword(""); setEditStatus(null); setShowEditPassword(false); setIsEditModalOpen(true);
+  };
+
+  const openDeleteModal = (user: ApiUser) => {
+    setUserToDelete(user);
+    setDeleteStatus("idle");
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!userToDelete) return;
+    setIsDeleting(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `https://tickets-backend-api-gxbkf5enbafxcvb2.francecentral-01.azurewebsites.net/api/users/admin/${userToDelete.iIdUser}`,
+        { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) throw new Error("Error al eliminar");
+      setDeleteStatus("success");
+      // Limpiar caché y quitar el usuario del estado local
+      sessionStorage.removeItem("app_users");
+      setUsers(prev => prev.filter(u => u.iIdUser !== userToDelete.iIdUser));
+      setTimeout(() => { setIsDeleteModalOpen(false); setUserToDelete(null); }, 1800);
+    } catch {
+      setDeleteStatus("error");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Badge de rol
@@ -689,14 +723,28 @@ export const Users = () => {
 
                         {/* Acciones */}
                         <td className="px-8 py-5 text-right print:hidden">
-                          <motion.button
-                            whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-                            onClick={() => openEditModal(user)}
-                            className="p-2.5 text-slate-400 bg-slate-100 dark:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/20 rounded-xl transition-all duration-200 shadow-sm"
-                            title="Cambiar Contraseña"
-                          >
-                            <span className="material-symbols-rounded text-[20px] block">password</span>
-                          </motion.button>
+                          <div className="flex items-center justify-end gap-2">
+                            {/* Cambiar contraseña */}
+                            <motion.button
+                              whileHover={{ scale: 1.12, rotate: -8 }}
+                              whileTap={{ scale: 0.88 }}
+                              onClick={() => openEditModal(user)}
+                              className="p-2.5 text-slate-400 bg-slate-100 dark:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/20 rounded-xl transition-all duration-200 shadow-sm"
+                              title="Cambiar Contraseña"
+                            >
+                              <span className="material-symbols-rounded text-[19px] block">edit_square</span>
+                            </motion.button>
+                            {/* Eliminar usuario */}
+                            <motion.button
+                              whileHover={{ scale: 1.12, rotate: 8 }}
+                              whileTap={{ scale: 0.88 }}
+                              onClick={() => openDeleteModal(user)}
+                              className="p-2.5 text-slate-400 bg-slate-100 dark:bg-slate-800 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/20 rounded-xl transition-all duration-200 shadow-sm"
+                              title="Desactivar Usuario"
+                            >
+                              <span className="material-symbols-rounded text-[19px] block">delete</span>
+                            </motion.button>
+                          </div>
                         </td>
                       </motion.tr>
                     ))
@@ -759,212 +807,446 @@ export const Users = () => {
         </Card>
       </motion.div>
 
-      {/* MODAL: EXPORTAR MEJORADO (Premium Apple-Like) */}
+      {/* MODAL: EXPORTAR — mismo estilo premium */}
       <AnimatePresence>
         {isExportModalOpen && (
           <motion.div
             key="export-overlay"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-0"
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            onClick={(e) => { if (e.target === e.currentTarget && !isExporting) { setIsExportModalOpen(false); setSelectedExportFormat(null); }}}
           >
             <motion.div
               key="export-content"
-              initial={{ scale: 0.90, opacity: 0, y: 20 }}
+              initial={{ scale: 0.88, opacity: 0, y: 40 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.93, opacity: 0, y: 12 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto comments-scroll bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700/60 rounded-[28px] sm:rounded-[32px] shadow-2xl flex flex-col p-6 sm:p-8 md:p-10"
+              exit={{ scale: 0.92, opacity: 0, y: 20 }}
+              transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+              className="relative w-full max-w-md max-h-[92vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700/60 rounded-[28px] shadow-2xl"
             >
-              {/* Header */}
-              <div className="flex flex-col items-center text-center mb-6 sm:mb-8">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-[20px] flex items-center justify-center mb-3 sm:mb-4 shadow-inner border border-blue-100 dark:border-blue-500/20">
-                  <span className="material-symbols-rounded text-3xl sm:text-4xl">cloud_download</span>
-                </div>
-                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Exportar Directorio</h2>
-                <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1 sm:mt-2">
-                  Configura los filtros y selecciona el formato.
-                </p>
-              </div>
+              {/* Franja superior azul-violeta */}
+              <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500" />
 
-              {/* Filtros dentro del Modal (Con CustomSelect Premium) */}
-              <div className="flex flex-col gap-4 sm:gap-5 mb-6 sm:mb-8 shrink-0">
-                <div className="relative z-50">
-                  <CustomSelect
-                    value={exportRoleFilter}
-                    onChange={(val: string) => setExportRoleFilter(val)}
-                    options={exportRolesList}
-                    placeholder="Filtrar por Rol"
-                    icon="admin_panel_settings"
-                  />
-                </div>
-                <div className="relative z-40">
-                  <CustomSelect
-                    value={exportDeptFilter}
-                    onChange={(val: string) => setExportDeptFilter(val)}
-                    options={exportDeptsList}
-                    placeholder="Filtrar por Departamento"
-                    icon="domain"
-                  />
-                </div>
-
-                <div className="flex justify-between items-center px-2 pt-1 sm:pt-2">
-                  <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest">Total a exportar</span>
-                  <span className="text-xs sm:text-sm font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-full">{usersToExport.length} usuarios</span>
-                </div>
-              </div>
-
-              {/* Opciones de Formato */}
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8 shrink-0">
-                {[
-                  { key: "excel", icon: "table_view", label: "Excel (CSV)", color: "emerald" },
-                  { key: "pdf", icon: "picture_as_pdf", label: "Archivo PDF", color: "rose" },
-                ].map(({ key, icon, label, color }) => {
-                  const isSelected = selectedExportFormat === key;
-                  return (
-                    <button
-                      type="button"
-                      key={key}
-                      onClick={() => setSelectedExportFormat(key as "pdf" | "excel")}
-                      className={`flex-1 group relative overflow-hidden flex flex-row sm:flex-col items-center justify-start sm:justify-center gap-3 sm:gap-2 p-4 sm:p-5 rounded-[20px] sm:rounded-[24px] border-2 transition-all duration-300 ${isSelected ? `border-${color}-500 bg-${color}-50/50 dark:bg-${color}-500/10 shadow-md scale-[1.02]` : "border-slate-200 dark:border-slate-700/60 hover:border-slate-300 dark:hover:border-slate-600 active:scale-95 bg-slate-50 dark:bg-[#0f172a]"}`}
-                    >
-                      <span className={`material-symbols-rounded text-[28px] sm:text-[32px] transition-colors ${isSelected ? `text-${color}-500` : "text-slate-400 group-hover:text-slate-500"}`}>{icon}</span>
-                      <span className={`font-bold text-sm ${isSelected ? `text-${color}-700 dark:text-${color}-400` : "text-slate-700 dark:text-slate-300"}`}>{label}</span>
-                      {isSelected && (
-                        <span className={`material-symbols-rounded absolute right-4 sm:top-3 sm:right-3 text-${color}-500 text-xl`}>check_circle</span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Botones */}
-              <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 mt-auto shrink-0">
-                <button
-                  type="button"
-                  onClick={() => { setIsExportModalOpen(false); setSelectedExportFormat(null); }}
-                  disabled={isExporting}
-                  className="flex-1 py-3.5 sm:py-4 font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl transition-all active:scale-95 disabled:opacity-50"
+              <div className="p-5 sm:p-7 flex flex-col items-center text-center gap-4 sm:gap-5">
+                {/* Ícono animado */}
+                <motion.div
+                  initial={{ scale: 0.6, rotate: -15, opacity: 0 }}
+                  animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 18, delay: 0.05 }}
+                  className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center shadow-inner"
                 >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleExportSubmit}
-                  disabled={!selectedExportFormat || isExporting || usersToExport.length === 0}
-                  className="flex-[1.5] flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-3.5 sm:py-4 rounded-2xl font-bold shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-40 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:shadow-none disabled:text-slate-500"
-                >
-                  {isExporting
-                    ? <span className="material-symbols-rounded animate-spin">progress_activity</span>
-                    : <><span className="material-symbols-rounded text-[20px]">save_alt</span> Descargar</>
-                  }
-                </button>
+                  <span className="material-symbols-rounded text-3xl text-blue-500">cloud_download</span>
+                </motion.div>
+
+                {/* Título */}
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">Exportar Directorio</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+                    Elige los filtros y el formato de descarga.
+                  </p>
+                </div>
+
+                {/* Filtros */}
+                <div className="flex flex-col gap-3 w-full">
+                  <div className="relative z-50">
+                    <CustomSelect
+                      value={exportRoleFilter}
+                      onChange={(val: string) => setExportRoleFilter(val)}
+                      options={exportRolesList}
+                      placeholder="Filtrar por Rol"
+                      icon="admin_panel_settings"
+                    />
+                  </div>
+                  <div className="relative z-40">
+                    <CustomSelect
+                      value={exportDeptFilter}
+                      onChange={(val: string) => setExportDeptFilter(val)}
+                      options={exportDeptsList}
+                      placeholder="Filtrar por Departamento"
+                      icon="domain"
+                    />
+                  </div>
+
+                  {/* Chip total */}
+                  <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl w-full">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Total a exportar</span>
+                    <span className="text-sm font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-full">
+                      {usersToExport.length} usuarios
+                    </span>
+                  </div>
+                </div>
+
+                {/* Opciones de Formato */}
+                <div className="flex gap-3 w-full">
+                  {([
+                    { key: "excel", icon: "table_view",     label: "Excel (CSV)", borderColor: "border-emerald-400", bgColor: "bg-emerald-50 dark:bg-emerald-500/10", ringColor: "ring-emerald-400/30", textColor: "text-emerald-600 dark:text-emerald-400" },
+                    { key: "pdf",   icon: "picture_as_pdf", label: "PDF",          borderColor: "border-rose-400",    bgColor: "bg-rose-50 dark:bg-rose-500/10",       ringColor: "ring-rose-400/30",    textColor: "text-rose-600 dark:text-rose-400" },
+                  ] as const).map(({ key, icon, label, borderColor, bgColor, ringColor, textColor }, i) => {
+                    const isSelected = selectedExportFormat === key;
+                    return (
+                      <motion.button
+                        key={key}
+                        type="button"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.12 + i * 0.07, duration: 0.28 }}
+                        whileHover={{ scale: 1.04 }}
+                        whileTap={{ scale: 0.96 }}
+                        onClick={() => setSelectedExportFormat(key as "pdf" | "excel")}
+                        className={`flex-1 relative flex flex-col items-center justify-center gap-2 py-5 rounded-[20px] border-2 transition-all duration-200 ${
+                          isSelected
+                            ? `${borderColor} ${bgColor} ring-4 ${ringColor} shadow-md`
+                            : "border-slate-200 dark:border-slate-700/60 bg-slate-50 dark:bg-[#0f172a] hover:border-slate-300 dark:hover:border-slate-600"
+                        }`}
+                      >
+                        <span className={`material-symbols-rounded text-[30px] transition-colors ${isSelected ? textColor : "text-slate-400"}`}>
+                          {icon}
+                        </span>
+                        <span className={`font-bold text-sm transition-colors ${isSelected ? textColor : "text-slate-600 dark:text-slate-300"}`}>
+                          {label}
+                        </span>
+                        {isSelected && (
+                          <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                            className={`absolute top-2.5 right-2.5 material-symbols-rounded text-[16px] ${textColor}`}
+                          >check_circle</motion.span>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                {/* Botones */}
+                <div className="flex gap-3 w-full mt-1">
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }}
+                    onClick={() => { setIsExportModalOpen(false); setSelectedExportFormat(null); }}
+                    disabled={isExporting}
+                    className="flex-1 py-3.5 font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl transition-all disabled:opacity-40"
+                  >
+                    Cancelar
+                  </motion.button>
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.03, boxShadow: "0 8px 24px rgba(59,130,246,0.35)" }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={handleExportSubmit}
+                    disabled={!selectedExportFormat || isExporting || usersToExport.length === 0}
+                    className="flex-[1.4] flex items-center justify-center gap-2 py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold shadow-lg shadow-blue-500/30 transition-all disabled:opacity-40 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:shadow-none disabled:text-slate-500"
+                  >
+                    {isExporting ? (
+                      <motion.span
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                        className="material-symbols-rounded text-[20px]"
+                      >progress_activity</motion.span>
+                    ) : (
+                      <>
+                        <span className="material-symbols-rounded text-[18px]">save_alt</span>
+                        Descargar
+                      </>
+                    )}
+                  </motion.button>
+                </div>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* MODAL: CAMBIAR CONTRASEÑA */}
+      {/* MODAL: CAMBIAR CONTRASEÑA — mismo estilo que Delete */}
       <AnimatePresence>
         {isEditModalOpen && userToEdit && (
           <motion.div
             key="edit-overlay"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-0"
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            onClick={(e) => { if (e.target === e.currentTarget && editStatus?.type !== "success") { setIsEditModalOpen(false); setUserToEdit(null); }}}
           >
             <motion.div
               key="edit-content"
-              initial={{ scale: 0.90, opacity: 0, y: 20 }}
+              initial={{ scale: 0.88, opacity: 0, y: 40 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.93, opacity: 0, y: 12 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="relative w-full max-w-md max-h-[90vh] overflow-y-auto comments-scroll bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700/60 rounded-[28px] sm:rounded-[32px] shadow-2xl flex flex-col"
+              exit={{ scale: 0.92, opacity: 0, y: 20 }}
+              transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+              className="relative w-full max-w-sm bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700/60 rounded-[28px] shadow-2xl overflow-hidden"
             >
-              {/* Header modal */}
-              <div className="p-6 sm:p-8 border-b border-slate-100 dark:border-slate-700/50 flex flex-col gap-2 shrink-0">
-                <div className="w-14 h-14 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-3xl flex items-center justify-center mb-2 border border-blue-100 dark:border-blue-500/20">
-                  <span className="material-symbols-rounded text-3xl">lock_reset</span>
-                </div>
-                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">Cambiar Contraseña</h2>
-                <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">
-                  Asignando nueva credencial para{" "}
-                  <span className="font-bold text-blue-500">@{userToEdit.sUser}</span>
-                </p>
-              </div>
+              {/* Franja azul superior */}
+              <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 to-indigo-500" />
 
-              {/* Body modal */}
-              <form onSubmit={handlePasswordUpdate} className="p-6 sm:p-8 flex flex-col gap-5 sm:gap-6 shrink-0">
-                {editStatus?.type === "success" ? (
-                  <div className="py-6 flex flex-col items-center justify-center text-center">
+              <div className="p-7 flex flex-col items-center text-center gap-5">
+                <AnimatePresence mode="wait">
+                  {editStatus?.type === "success" ? (
                     <motion.div
-                      initial={{ scale: 0 }} animate={{ scale: 1 }}
+                      key="pw-success"
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
                       transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                      className="w-20 h-20 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-emerald-500/20"
+                      className="flex flex-col items-center gap-3"
                     >
-                      <span className="material-symbols-rounded text-4xl">check</span>
-                    </motion.div>
-                    <p className="text-xl font-extrabold text-slate-800 dark:text-white mb-2">¡Completado!</p>
-                    <p className="text-slate-500 text-sm font-medium">{editStatus.text}</p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="group relative">
-                      <label className="block text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 sm:mb-3 ml-1">
-                        Nueva Contraseña
-                      </label>
-                      <div className="relative flex items-center">
-                        <span className="material-symbols-rounded absolute left-4 text-slate-400 z-20">key</span>
-                        <input
-                          type={showEditPassword ? "text" : "password"}
-                          value={newPassword}
-                          onChange={(e) => { setNewPassword(e.target.value); if (editStatus?.type === "error") setEditStatus(null); }}
-                          className={`w-full pl-12 pr-14 py-3.5 sm:py-4 bg-white dark:bg-[#0f172a]/50 border-2 ${editStatus?.type === "error" ? "border-rose-500 ring-2 ring-rose-500/20" : "border-slate-200 dark:border-slate-700/60"} rounded-2xl text-sm sm:text-base text-slate-900 dark:text-white placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20`}
-                          placeholder="Ingresa la nueva clave"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowEditPassword(!showEditPassword)}
-                          className="absolute right-4 p-2 text-slate-400 hover:text-blue-500 z-20 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-90"
-                        >
-                          <span className="material-symbols-rounded text-[22px] block">{showEditPassword ? "visibility_off" : "visibility"}</span>
-                        </button>
+                      <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center">
+                        <span className="material-symbols-rounded text-3xl text-emerald-500">check</span>
                       </div>
-                      {editStatus?.type === "error" && (
-                        <p className="text-rose-500 text-[11px] sm:text-sm mt-3 font-medium flex items-start gap-1">
-                          <span className="material-symbols-rounded text-base mt-0.5">error</span>
-                          {editStatus.text}
-                        </p>
-                      )}
-                    </div>
+                      <p className="text-lg font-extrabold text-slate-800 dark:text-white">¡Contraseña actualizada!</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">La nueva clave fue guardada correctamente.</p>
+                    </motion.div>
+                  ) : (
+                    <motion.div key="pw-form" className="flex flex-col items-center gap-5 w-full">
+                      {/* Ícono animado */}
+                      <motion.div
+                        initial={{ scale: 0.6, rotate: -15, opacity: 0 }}
+                        animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 18, delay: 0.05 }}
+                        className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center shadow-inner"
+                      >
+                        <span className="material-symbols-rounded text-3xl text-blue-500">lock_reset</span>
+                      </motion.div>
 
-                    <div className="flex flex-col-reverse sm:flex-row gap-3 mt-2">
-                      <button
-                        type="button"
-                        onClick={() => setIsEditModalOpen(false)}
-                        className="flex-1 py-3.5 sm:py-4 font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl transition-all active:scale-95"
+                      {/* Título */}
+                      <div className="flex flex-col gap-1">
+                        <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">Cambiar Contraseña</h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+                          Nueva clave para{" "}
+                          <span className="font-bold text-blue-500">@{userToEdit.sUser}</span>
+                        </p>
+                      </div>
+
+                      {/* Chip del usuario */}
+                      <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl w-full text-left">
+                        <div className={`w-9 h-9 shrink-0 rounded-full bg-gradient-to-br ${getAvatarGradient(userToEdit.iIdUser)} flex items-center justify-center text-[10px] font-bold text-white shadow`}>
+                          {getInitials(userToEdit.employeeName)}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-sm font-extrabold text-slate-800 dark:text-slate-100 truncate">{userToEdit.employeeName}</span>
+                          <span className="text-[11px] text-slate-400 font-medium">{userToEdit.roleName}</span>
+                        </div>
+                      </div>
+
+                      {/* Formulario */}
+                      <form onSubmit={handlePasswordUpdate} className="w-full flex flex-col gap-4">
+                        <div className="relative flex items-center">
+                          <span className="material-symbols-rounded absolute left-4 text-slate-400 z-20 text-[20px]">key</span>
+                          <input
+                            type={showEditPassword ? "text" : "password"}
+                            value={newPassword}
+                            onChange={(e) => { setNewPassword(e.target.value); if (editStatus?.type === "error") setEditStatus(null); }}
+                            className={`w-full pl-12 pr-14 py-3.5 bg-white dark:bg-[#0f172a]/60 border-2 ${
+                              editStatus?.type === "error"
+                                ? "border-rose-400 ring-2 ring-rose-400/20"
+                                : "border-slate-200 dark:border-slate-700/60 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20"
+                            } rounded-2xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 outline-none transition-all duration-200`}
+                            placeholder="Nueva contraseña..."
+                            autoFocus
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowEditPassword(v => !v)}
+                            className="absolute right-4 p-1.5 text-slate-400 hover:text-blue-500 z-20 rounded-xl transition-all"
+                          >
+                            <span className="material-symbols-rounded text-[20px] block">{showEditPassword ? "visibility_off" : "visibility"}</span>
+                          </button>
+                        </div>
+
+                        {/* Error inline */}
+                        <AnimatePresence>
+                          {editStatus?.type === "error" && (
+                            <motion.p
+                              initial={{ opacity: 0, y: -4, height: 0 }}
+                              animate={{ opacity: 1, y: 0, height: "auto" }}
+                              exit={{ opacity: 0, y: -4, height: 0 }}
+                              transition={{ duration: 0.18 }}
+                              className="flex items-center gap-1.5 text-rose-500 text-[12px] font-semibold -mt-1"
+                            >
+                              <span className="material-symbols-rounded text-[15px] shrink-0">error</span>
+                              {editStatus.text}
+                            </motion.p>
+                          )}
+                        </AnimatePresence>
+
+                        {/* Botones */}
+                        <div className="flex gap-3 mt-1">
+                          <motion.button
+                            type="button"
+                            whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }}
+                            onClick={() => { setIsEditModalOpen(false); setUserToEdit(null); }}
+                            disabled={isEditSubmitting}
+                            className="flex-1 py-3.5 font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl transition-all disabled:opacity-40"
+                          >
+                            Cancelar
+                          </motion.button>
+                          <motion.button
+                            type="submit"
+                            whileHover={{ scale: 1.03, boxShadow: "0 8px 24px rgba(59,130,246,0.35)" }}
+                            whileTap={{ scale: 0.96 }}
+                            disabled={isEditSubmitting || !newPassword}
+                            className="flex-[1.4] flex items-center justify-center gap-2 py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold shadow-lg shadow-blue-500/30 transition-all disabled:opacity-50"
+                          >
+                            {isEditSubmitting ? (
+                              <motion.span
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                                className="material-symbols-rounded text-[20px]"
+                              >progress_activity</motion.span>
+                            ) : (
+                              <>
+                                <span className="material-symbols-rounded text-[18px]">lock_reset</span>
+                                Guardar
+                              </>
+                            )}
+                          </motion.button>
+                        </div>
+                      </form>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL: CONFIRMAR ELIMINACIÓN */}
+      <AnimatePresence>
+        {isDeleteModalOpen && userToDelete && (
+          <motion.div
+            key="delete-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            onClick={(e) => { if (e.target === e.currentTarget && deleteStatus === "idle") { setIsDeleteModalOpen(false); setUserToDelete(null); }}}
+          >
+            <motion.div
+              key="delete-content"
+              initial={{ scale: 0.88, opacity: 0, y: 40 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.92, opacity: 0, y: 20 }}
+              transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+              className="relative w-full max-w-sm bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700/60 rounded-[28px] shadow-2xl overflow-hidden"
+            >
+              {/* Franja de color superior */}
+              <div className="h-1.5 w-full bg-gradient-to-r from-rose-500 to-pink-600" />
+
+              <div className="p-7 flex flex-col items-center text-center gap-5">
+
+                {/* Estado: éxito */}
+                <AnimatePresence mode="wait">
+                  {deleteStatus === "success" ? (
+                    <motion.div
+                      key="del-success"
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                      className="flex flex-col items-center gap-3"
+                    >
+                      <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center">
+                        <span className="material-symbols-rounded text-3xl text-emerald-500">check</span>
+                      </div>
+                      <p className="text-lg font-extrabold text-slate-800 dark:text-white">¡Usuario desactivado!</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">El usuario ha sido eliminado correctamente.</p>
+                    </motion.div>
+                  ) : deleteStatus === "error" ? (
+                    <motion.div
+                      key="del-error"
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                      className="flex flex-col items-center gap-3"
+                    >
+                      <div className="w-16 h-16 rounded-full bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center">
+                        <span className="material-symbols-rounded text-3xl text-rose-500">error</span>
+                      </div>
+                      <p className="text-lg font-extrabold text-slate-800 dark:text-white">Error al eliminar</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">No se pudo desactivar el usuario. Intenta de nuevo.</p>
+                      <motion.button
+                        whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+                        onClick={() => setIsDeleteModalOpen(false)}
+                        className="mt-1 px-6 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl font-bold text-sm transition-all"
                       >
-                        Cancelar
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={isEditSubmitting || !newPassword}
-                        className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-3.5 sm:py-4 rounded-2xl font-bold shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-50 disabled:shadow-none"
+                        Cerrar
+                      </motion.button>
+                    </motion.div>
+                  ) : (
+                    <motion.div key="del-confirm" className="flex flex-col items-center gap-5 w-full">
+                      {/* Ícono animado */}
+                      <motion.div
+                        initial={{ scale: 0.6, rotate: -15, opacity: 0 }}
+                        animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 18, delay: 0.05 }}
+                        className="w-16 h-16 rounded-full bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center shadow-inner"
                       >
-                        {isEditSubmitting
-                          ? <span className="material-symbols-rounded animate-spin">progress_activity</span>
-                          : "Guardar"
-                        }
-                      </button>
-                    </div>
-                  </>
-                )}
-              </form>
+                        <span className="material-symbols-rounded text-3xl text-rose-500">person_remove</span>
+                      </motion.div>
+
+                      {/* Texto */}
+                      <div className="flex flex-col gap-1.5">
+                        <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">¿Desactivar usuario?</h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium leading-snug">
+                          Estás a punto de desactivar a{" "}
+                          <span className="font-black text-slate-700 dark:text-slate-200">
+                            {userToDelete.employeeName}
+                          </span>
+                          {" "}(<span className="text-rose-500 font-bold">@{userToDelete.sUser}</span>).
+                          <br />Esta acción no se puede deshacer.
+                        </p>
+                      </div>
+
+                      {/* Chip del usuario */}
+                      <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl w-full">
+                        <div className={`w-9 h-9 shrink-0 rounded-full bg-gradient-to-br ${getAvatarGradient(userToDelete.iIdUser)} flex items-center justify-center text-[10px] font-bold text-white shadow`}>
+                          {getInitials(userToDelete.employeeName)}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-sm font-extrabold text-slate-800 dark:text-slate-100 truncate">{userToDelete.employeeName}</span>
+                          <span className="text-[11px] text-slate-400 font-medium">{userToDelete.roleName}</span>
+                        </div>
+                      </div>
+
+                      {/* Botones */}
+                      <div className="flex gap-3 w-full mt-1">
+                        <motion.button
+                          whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }}
+                          onClick={() => { setIsDeleteModalOpen(false); setUserToDelete(null); }}
+                          disabled={isDeleting}
+                          className="flex-1 py-3.5 font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl transition-all disabled:opacity-40"
+                        >
+                          Cancelar
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.03, boxShadow: "0 8px 24px rgba(244,63,94,0.35)" }}
+                          whileTap={{ scale: 0.96 }}
+                          onClick={handleDelete}
+                          disabled={isDeleting}
+                          className="flex-[1.4] flex items-center justify-center gap-2 py-3.5 bg-rose-600 hover:bg-rose-500 text-white rounded-2xl font-bold shadow-lg shadow-rose-500/30 transition-all disabled:opacity-50"
+                        >
+                          {isDeleting ? (
+                            <motion.span
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                              className="material-symbols-rounded text-[20px]"
+                            >progress_activity</motion.span>
+                          ) : (
+                            <>
+                              <span className="material-symbols-rounded text-[18px]">person_remove</span>
+                              Desactivar
+                            </>
+                          )}
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
     </motion.div>
   );
-};
+};
